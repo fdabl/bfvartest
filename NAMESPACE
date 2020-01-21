@@ -1,2 +1,8 @@
 export(one_sample)
 export(two_sample)
+
+import(Rcpp)
+import(methods)
+import(rstantools)
+importFrom(rstan,sampling)
+useDynLib(BayesLevene, .registration = TRUE)

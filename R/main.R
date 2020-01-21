@@ -7,7 +7,7 @@
 #' @return the one-sample log Bayes factor in favour of H1
 #' @examples
 #' one_sample(100, 1, 1, 4.50)
-one_sample <- function(n, s2, popsd, alpha = 0.50) {
+one_sample <- function(n, s2, popsd, alpha = 0.50, logarithm = TRUE) {
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
@@ -16,7 +16,7 @@ one_sample <- function(n, s2, popsd, alpha = 0.50) {
     exp(term)
   }, 0, Inf)$value / beta(alpha, alpha)
 
-  log(value)
+  ifelse(logarithm, log(value), value)[[1]]
 }
 
 
@@ -35,7 +35,7 @@ one_sample <- function(n, s2, popsd, alpha = 0.50) {
 #' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1)) # one-sided test
 #' two_sample(100, 200, 1, 2, 4.5, null_interval = c(0.9, 1.1)) # interval Bayes factor
 #' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
-two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL) {
+two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
 
   alt_condition <- (all(is.numeric(alternative_interval)) &&
                     alternative_interval[2] > alternative_interval[1] &&
@@ -65,24 +65,63 @@ two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0,
   }
 
   logml1 <- .compute_logml_restr(n1, n2, s1, s2, interval = alternative_interval, alpha = alpha)
-  logml1 - logml0
+  ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
 }
 
 
-.compute_logml_restr <- function(n1, n2, s1, s2, interval, alpha = 0.50) {
-  n <- n1 + n2
-  to_rho <- function(delta) ifelse(delta == Inf, 1, delta^2 / (1 + delta^2))
-  lo <- to_rho(interval[1])
-  hi <- to_rho(interval[2])
-  Z <- pbeta(hi, alpha, alpha) - pbeta(lo, alpha, alpha)
+#' Computes the k-sample log Bayes factor for all hypotheses
+#'
+#' @param hyp vector of hypotheses
+#' @param ns vector of sample sizes
+#' @param ss vector of observed sum of squares
+#' @param alpha prior parameter
+#' @param ... arguments to rstan::sampling
+#' @return the log Bayes factors of all hypotheses against each other
+#' @examples
+#' ss <- c(1, 2, 3)
+#' ns <- c(100, 100, 100)
+#' hyp <- c('1=2=3', '1,2,3', '1>2>3')
+#' k_sample(hyp, ns, ss, 0.50)
+k_sample <- function(hyp, ns, ss, alpha = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
 
-  # Rmpfr provides arbitrary precision floating point arithmetic
-  value <- Rmpfr::integrateR(function(rho) {
-    rho <- Rmpfr::mpfr(rho, 100)
-    llh <- ((n1 - 1)/2 + alpha - 1) * log(rho) + ((n2 - 1)/2 + alpha - 1) * log(1 - rho) + ((2 - n)/2) * log(rho*n1*s1 + (1 - rho)*n2*s2)
+  len <- c(length(hyp), length(ns), length(ss))
 
-    exp(llh - log(Z) - lbeta(alpha, alpha))
-  }, lo, hi)$value
+  if (len[1] < 2) {
+    stop('Need at least two hypotheses to compare!')
+  }
+  if (len[2] != len[3]) {
+    stop('Need information about sample size and observed sum of squares for all groups!')
+  }
 
-  log(value)
+  res <- list()
+  prec <- 1/ss
+
+  for (h in hyp) {
+    res[[h]] <- .create_levene_object(h, ns, prec, alpha, priors_only = priors_only, compute_ml = ifelse(priors_only, !priors_only, compute_ml), ...)
+  }
+
+  # Add Bayes factors
+  if (!priors_only && compute_ml) {
+    nr_hyp <- length(hyp)
+    BF_matrix <- diag(0, nr_hyp)
+    colnames(BF_matrix) = rownames(BF_matrix) = hyp
+
+    for (i in seq(nr_hyp)) {
+      for (j in seq(nr_hyp)) {
+        if (i != j) {
+          hi <- hyp[i]
+          hj <- hyp[j]
+          BF_matrix[i, j] <- res[[hi]]$logml - res[[hj]]$logml
+        }
+      }
+    }
+
+    if (logarithm) {
+      res[['BF']] <- BF_matrix
+    } else {
+      res[['BF']] <- exp(BF_matrix)
+    }
+  }
+
+  res
 }

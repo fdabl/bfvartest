@@ -16,7 +16,8 @@ one_sample <- function(n, s2, popsd, alpha = 0.50, logarithm = TRUE) {
     exp(term)
   }, 0, Inf)$value / beta(alpha, alpha)
 
-  ifelse(logarithm, log(value), value)[[1]]
+  val <- ifelse(logarithm, log(value), value)[[1]]
+  suppressWarnings(Rmpfr::asNumeric(val))
 }
 
 
@@ -65,7 +66,8 @@ two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0,
   }
 
   logml1 <- .compute_logml_restr(n1, n2, s1, s2, interval = alternative_interval, alpha = alpha)
-  ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
+  val <- ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
+  suppressWarnings(Rmpfr::asNumeric(val))
 }
 
 
@@ -73,7 +75,7 @@ two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0,
 #'
 #' @param hyp vector of hypotheses
 #' @param ns vector of sample sizes
-#' @param ss vector of observed sum of squares
+#' @params ss a vector containing sample sum of squares
 #' @param alpha prior parameter
 #' @param ... arguments to rstan::sampling
 #' @return the log Bayes factors of all hypotheses against each other
@@ -94,10 +96,9 @@ k_sample <- function(hyp, ns, ss, alpha = 0.50, logarithm = TRUE, compute_ml = T
   }
 
   res <- list()
-  prec <- 1/ss
 
   for (h in hyp) {
-    res[[h]] <- .create_levene_object(h, ns, prec, alpha, priors_only = priors_only, compute_ml = ifelse(priors_only, !priors_only, compute_ml), ...)
+    res[[h]] <- .create_levene_object(h, ns, ss, alpha, priors_only = priors_only, compute_ml = ifelse(priors_only, !priors_only, compute_ml), ...)
   }
 
   # Add Bayes factors

@@ -36,9 +36,279 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_BayesLevene");
-    reader.add_event(174, 172, "end", "model_BayesLevene");
+    reader.add_event(171, 169, "end", "model_BayesLevene");
     return reader;
 }
+
+template <typename T0__, typename T1__>
+Eigen::Matrix<typename boost::math::tools::promote_args<T0__, T1__>::type, Eigen::Dynamic,1>
+order_parameters(const Eigen::Matrix<T0__, Eigen::Dynamic,1>& rho,
+                     const Eigen::Matrix<T1__, Eigen::Dynamic,1>& beta,
+                     const int& k,
+                     const int& nr_rel,
+                     const std::vector<int>& relations,
+                     const std::vector<std::vector<int> >& constraint_mat, std::ostream* pstream__) {
+    typedef typename boost::math::tools::promote_args<T0__, T1__>::type local_scalar_t__;
+    typedef local_scalar_t__ fun_return_scalar_t__;
+    const static bool propto__ = true;
+    (void) propto__;
+        local_scalar_t__ DUMMY_VAR__(std::numeric_limits<double>::quiet_NaN());
+        (void) DUMMY_VAR__;  // suppress unused var warning
+
+    int current_statement_begin__ = -1;
+    try {
+        {
+        current_statement_begin__ = 4;
+        validate_non_negative_index("sorted_rho", "k", k);
+        Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  sorted_rho(static_cast<Eigen::VectorXd::Index>(k));
+        (void) sorted_rho;  // dummy to suppress unused var warning
+
+        stan::math::initialize(sorted_rho, DUMMY_VAR__);
+        stan::math::fill(sorted_rho,DUMMY_VAR__);
+        stan::math::assign(sorted_rho,rho);
+        current_statement_begin__ = 6;
+        int is_ordered(0);
+        (void) is_ordered;  // dummy to suppress unused var warning
+
+        stan::math::fill(is_ordered, std::numeric_limits<int>::min());
+        stan::math::assign(is_ordered,1);
+        current_statement_begin__ = 7;
+        int is_unconstrained(0);
+        (void) is_unconstrained;  // dummy to suppress unused var warning
+
+        stan::math::fill(is_unconstrained, std::numeric_limits<int>::min());
+        stan::math::assign(is_unconstrained,1);
+
+
+        current_statement_begin__ = 8;
+        for (int i = 1; i <= nr_rel; ++i) {
+
+            current_statement_begin__ = 9;
+            if (as_bool(logical_neq(get_base1(relations,i,"relations",1),2))) {
+
+                current_statement_begin__ = 10;
+                stan::math::assign(is_ordered, 0);
+            }
+        }
+        current_statement_begin__ = 14;
+        for (int i = 1; i <= nr_rel; ++i) {
+
+            current_statement_begin__ = 15;
+            if (as_bool(logical_neq(get_base1(relations,i,"relations",1),3))) {
+
+                current_statement_begin__ = 16;
+                stan::math::assign(is_unconstrained, 0);
+            }
+        }
+        current_statement_begin__ = 20;
+        if (as_bool(logical_negation(logical_eq(is_unconstrained,1)))) {
+
+            {
+            current_statement_begin__ = 22;
+            int i(0);
+            (void) i;  // dummy to suppress unused var warning
+
+            stan::math::fill(i, std::numeric_limits<int>::min());
+            current_statement_begin__ = 23;
+            int bi(0);
+            (void) bi;  // dummy to suppress unused var warning
+
+            stan::math::fill(bi, std::numeric_limits<int>::min());
+            current_statement_begin__ = 24;
+            int hi(0);
+            (void) hi;  // dummy to suppress unused var warning
+
+            stan::math::fill(hi, std::numeric_limits<int>::min());
+            current_statement_begin__ = 25;
+            int lo(0);
+            (void) lo;  // dummy to suppress unused var warning
+
+            stan::math::fill(lo, std::numeric_limits<int>::min());
+            current_statement_begin__ = 26;
+            int el(0);
+            (void) el;  // dummy to suppress unused var warning
+
+            stan::math::fill(el, std::numeric_limits<int>::min());
+            current_statement_begin__ = 27;
+            int cur(0);
+            (void) cur;  // dummy to suppress unused var warning
+
+            stan::math::fill(cur, std::numeric_limits<int>::min());
+            current_statement_begin__ = 28;
+            int rel(0);
+            (void) rel;  // dummy to suppress unused var warning
+
+            stan::math::fill(rel, std::numeric_limits<int>::min());
+            current_statement_begin__ = 29;
+            int prev(0);
+            (void) prev;  // dummy to suppress unused var warning
+
+            stan::math::fill(prev, std::numeric_limits<int>::min());
+            current_statement_begin__ = 30;
+            validate_non_negative_index("ubound", "k", k);
+            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  ubound(static_cast<Eigen::VectorXd::Index>(k));
+            (void) ubound;  // dummy to suppress unused var warning
+
+            stan::math::initialize(ubound, DUMMY_VAR__);
+            stan::math::fill(ubound,DUMMY_VAR__);
+            current_statement_begin__ = 31;
+            validate_non_negative_index("lbound", "k", k);
+            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  lbound(static_cast<Eigen::VectorXd::Index>(k));
+            (void) lbound;  // dummy to suppress unused var warning
+
+            stan::math::initialize(lbound, DUMMY_VAR__);
+            stan::math::fill(lbound,DUMMY_VAR__);
+            current_statement_begin__ = 32;
+            int nr_equals(0);
+            (void) nr_equals;  // dummy to suppress unused var warning
+
+            stan::math::fill(nr_equals, std::numeric_limits<int>::min());
+            current_statement_begin__ = 33;
+            int nr_equalities(0);
+            (void) nr_equalities;  // dummy to suppress unused var warning
+
+            stan::math::fill(nr_equalities, std::numeric_limits<int>::min());
+            current_statement_begin__ = 34;
+            int relation_between(0);
+            (void) relation_between;  // dummy to suppress unused var warning
+
+            stan::math::fill(relation_between, std::numeric_limits<int>::min());
+            current_statement_begin__ = 35;
+            int cur_constraint(0);
+            (void) cur_constraint;  // dummy to suppress unused var warning
+
+            stan::math::fill(cur_constraint, std::numeric_limits<int>::min());
+            current_statement_begin__ = 36;
+            int nr_unconstraint(0);
+            (void) nr_unconstraint;  // dummy to suppress unused var warning
+
+            stan::math::fill(nr_unconstraint, std::numeric_limits<int>::min());
+
+
+            current_statement_begin__ = 37;
+            stan::math::assign(bi, 1);
+            current_statement_begin__ = 38;
+            stan::math::assign(el, 1);
+            current_statement_begin__ = 39;
+            stan::math::assign(cur_constraint, 1);
+            current_statement_begin__ = 42;
+            while (as_bool(logical_lte(el,k))) {
+
+                current_statement_begin__ = 48;
+                stan::math::assign(lo, get_base1(get_base1(constraint_mat,cur_constraint,"constraint_mat",1),1,"constraint_mat",2));
+                current_statement_begin__ = 49;
+                stan::math::assign(hi, get_base1(get_base1(constraint_mat,cur_constraint,"constraint_mat",1),2,"constraint_mat",2));
+                current_statement_begin__ = 51;
+                if (as_bool(logical_eq(lo,-(99)))) {
+
+                    current_statement_begin__ = 52;
+                    stan::math::assign(lbound, rep_vector(0,k));
+                } else {
+
+                    current_statement_begin__ = 54;
+                    stan::math::assign(lbound, rep_vector(0,k));
+                    current_statement_begin__ = 55;
+                    stan::model::assign(lbound, 
+                                stan::model::cons_list(stan::model::index_min_max(lo, k), stan::model::nil_index_list()), 
+                                stan::model::rvalue(sorted_rho, stan::model::cons_list(stan::model::index_min_max(lo, k), stan::model::nil_index_list()), "sorted_rho"), 
+                                "assigning variable lbound");
+                }
+                current_statement_begin__ = 58;
+                if (as_bool(logical_eq(hi,-(99)))) {
+
+                    current_statement_begin__ = 59;
+                    stan::math::assign(ubound, rep_vector(1,k));
+                } else {
+
+                    current_statement_begin__ = 61;
+                    stan::math::assign(ubound, rep_vector(1,k));
+                    current_statement_begin__ = 62;
+                    stan::model::assign(ubound, 
+                                stan::model::cons_list(stan::model::index_min_max(1, hi), stan::model::nil_index_list()), 
+                                stan::model::rvalue(sorted_rho, stan::model::cons_list(stan::model::index_min_max(1, hi), stan::model::nil_index_list()), "sorted_rho"), 
+                                "assigning variable ubound");
+                }
+                current_statement_begin__ = 66;
+                if (as_bool((primitive_value(logical_eq(min(ubound),1.0)) && primitive_value(logical_eq(max(lbound),0.0))))) {
+
+                    current_statement_begin__ = 69;
+                    if (as_bool(logical_neq(get_base1(relations,el,"relations",1),3))) {
+
+                        current_statement_begin__ = 70;
+                        stan::model::assign(sorted_rho, 
+                                    stan::model::cons_list(stan::model::index_uni(el), stan::model::nil_index_list()), 
+                                    ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
+                                    "assigning variable sorted_rho");
+                    }
+                } else {
+
+                    current_statement_begin__ = 74;
+                    stan::model::assign(sorted_rho, 
+                                stan::model::cons_list(stan::model::index_uni(el), stan::model::nil_index_list()), 
+                                ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
+                                "assigning variable sorted_rho");
+                }
+                current_statement_begin__ = 78;
+                stan::math::assign(i, 0);
+                current_statement_begin__ = 79;
+                stan::math::assign(nr_equalities, 0);
+                current_statement_begin__ = 80;
+                while (as_bool((primitive_value(logical_lt((el + i),k)) && primitive_value(logical_eq(get_base1(relations,(el + i),"relations",1),1))))) {
+
+                    current_statement_begin__ = 81;
+                    stan::math::assign(nr_equalities, stan::model::deep_copy((nr_equalities + 1)));
+                    current_statement_begin__ = 82;
+                    stan::math::assign(i, stan::model::deep_copy((i + 1)));
+                }
+                current_statement_begin__ = 86;
+                for (int j = 1; j <= nr_equalities; ++j) {
+
+                    current_statement_begin__ = 87;
+                    stan::model::assign(sorted_rho, 
+                                stan::model::cons_list(stan::model::index_uni((el + j)), stan::model::nil_index_list()), 
+                                ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
+                                "assigning variable sorted_rho");
+                }
+                current_statement_begin__ = 90;
+                stan::math::assign(bi, stan::model::deep_copy((bi + 1)));
+                current_statement_begin__ = 91;
+                stan::math::assign(el, stan::model::deep_copy((el + nr_equalities)));
+                current_statement_begin__ = 94;
+                if (as_bool((primitive_value(logical_lte((el + 1),k)) && primitive_value(logical_eq(get_base1(relations,el,"relations",1),2))))) {
+
+                    current_statement_begin__ = 95;
+                    stan::math::assign(cur_constraint, stan::model::deep_copy((cur_constraint + 1)));
+                }
+                current_statement_begin__ = 98;
+                stan::math::assign(el, stan::model::deep_copy((el + 1)));
+            }
+            }
+        }
+        current_statement_begin__ = 102;
+        stan::math::assign(sorted_rho, stan::model::deep_copy(divide(sorted_rho,sum(sorted_rho))));
+        current_statement_begin__ = 103;
+        return stan::math::promote_scalar<fun_return_scalar_t__>(sorted_rho);
+        }
+    } catch (const std::exception& e) {
+        stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
+        // Next line prevents compiler griping about no return
+        throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
+    }
+}
+
+
+struct order_parameters_functor__ {
+    template <typename T0__, typename T1__>
+        Eigen::Matrix<typename boost::math::tools::promote_args<T0__, T1__>::type, Eigen::Dynamic,1>
+    operator()(const Eigen::Matrix<T0__, Eigen::Dynamic,1>& rho,
+                     const Eigen::Matrix<T1__, Eigen::Dynamic,1>& beta,
+                     const int& k,
+                     const int& nr_rel,
+                     const std::vector<int>& relations,
+                     const std::vector<std::vector<int> >& constraint_mat, std::ostream* pstream__) const {
+        return order_parameters(rho, beta, k, nr_rel, relations, constraint_mat, pstream__);
+    }
+};
 
 #include <meta_header.hpp>
  class model_BayesLevene : public prob_grad {
@@ -94,43 +364,43 @@ public:
 
         // initialize member variables
         try {
-            current_statement_begin__ = 2;
+            current_statement_begin__ = 109;
             context__.validate_dims("data initialization", "k", "int", context__.to_vec());
             k = int(0);
             vals_i__ = context__.vals_i("k");
             pos__ = 0;
             k = vals_i__[pos__++];
-            current_statement_begin__ = 3;
+            current_statement_begin__ = 110;
             context__.validate_dims("data initialization", "alpha", "double", context__.to_vec());
             alpha = double(0);
             vals_r__ = context__.vals_r("alpha");
             pos__ = 0;
             alpha = vals_r__[pos__++];
-            current_statement_begin__ = 4;
+            current_statement_begin__ = 111;
             context__.validate_dims("data initialization", "nr_rel", "int", context__.to_vec());
             nr_rel = int(0);
             vals_i__ = context__.vals_i("nr_rel");
             pos__ = 0;
             nr_rel = vals_i__[pos__++];
-            current_statement_begin__ = 5;
+            current_statement_begin__ = 112;
             context__.validate_dims("data initialization", "nr_free", "int", context__.to_vec());
             nr_free = int(0);
             vals_i__ = context__.vals_i("nr_free");
             pos__ = 0;
             nr_free = vals_i__[pos__++];
-            current_statement_begin__ = 6;
+            current_statement_begin__ = 113;
             context__.validate_dims("data initialization", "nr_equal", "int", context__.to_vec());
             nr_equal = int(0);
             vals_i__ = context__.vals_i("nr_equal");
             pos__ = 0;
             nr_equal = vals_i__[pos__++];
-            current_statement_begin__ = 7;
+            current_statement_begin__ = 114;
             context__.validate_dims("data initialization", "nr_ordered", "int", context__.to_vec());
             nr_ordered = int(0);
             vals_i__ = context__.vals_i("nr_ordered");
             pos__ = 0;
             nr_ordered = vals_i__[pos__++];
-            current_statement_begin__ = 8;
+            current_statement_begin__ = 115;
             validate_non_negative_index("index_vector", "k", k);
             context__.validate_dims("data initialization", "index_vector", "int", context__.to_vec(k));
             validate_non_negative_index("index_vector", "k", k);
@@ -141,7 +411,7 @@ public:
             for (size_t i_0__ = 0; i_0__ < index_vector_limit_0__; ++i_0__) {
                 index_vector[i_0__] = vals_i__[pos__++];
             }
-            current_statement_begin__ = 9;
+            current_statement_begin__ = 116;
             validate_non_negative_index("relations", "nr_rel", nr_rel);
             context__.validate_dims("data initialization", "relations", "int", context__.to_vec(nr_rel));
             validate_non_negative_index("relations", "nr_rel", nr_rel);
@@ -152,7 +422,7 @@ public:
             for (size_t i_0__ = 0; i_0__ < relations_limit_0__; ++i_0__) {
                 relations[i_0__] = vals_i__[pos__++];
             }
-            current_statement_begin__ = 10;
+            current_statement_begin__ = 117;
             validate_non_negative_index("constraint_mat", "(nr_ordered + 1)", (nr_ordered + 1));
             validate_non_negative_index("constraint_mat", "2", 2);
             context__.validate_dims("data initialization", "constraint_mat", "int", context__.to_vec((nr_ordered + 1),2));
@@ -168,7 +438,7 @@ public:
                     constraint_mat[i_0__][i_1__] = vals_i__[pos__++];
                 }
             }
-            current_statement_begin__ = 11;
+            current_statement_begin__ = 118;
             validate_non_negative_index("s2", "k", k);
             context__.validate_dims("data initialization", "s2", "vector_d", context__.to_vec(k));
             validate_non_negative_index("s2", "k", k);
@@ -179,7 +449,7 @@ public:
             for (size_t i_vec__ = 0; i_vec__ < s2_i_vec_lim__; ++i_vec__) {
                 s2[i_vec__] = vals_r__[pos__++];
             }
-            current_statement_begin__ = 12;
+            current_statement_begin__ = 119;
             validate_non_negative_index("N", "k", k);
             context__.validate_dims("data initialization", "N", "vector_d", context__.to_vec(k));
             validate_non_negative_index("N", "k", k);
@@ -190,7 +460,7 @@ public:
             for (size_t i_vec__ = 0; i_vec__ < N_i_vec_lim__; ++i_vec__) {
                 N[i_vec__] = vals_r__[pos__++];
             }
-            current_statement_begin__ = 13;
+            current_statement_begin__ = 120;
             context__.validate_dims("data initialization", "priors_only", "int", context__.to_vec());
             priors_only = int(0);
             vals_i__ = context__.vals_i("priors_only");
@@ -198,58 +468,58 @@ public:
             priors_only = vals_i__[pos__++];
 
             // validate, data variables
-            current_statement_begin__ = 2;
-            current_statement_begin__ = 3;
-            current_statement_begin__ = 4;
-            current_statement_begin__ = 5;
-            current_statement_begin__ = 6;
-            current_statement_begin__ = 7;
-            current_statement_begin__ = 8;
-            current_statement_begin__ = 9;
-            current_statement_begin__ = 10;
-            current_statement_begin__ = 11;
+            current_statement_begin__ = 109;
+            current_statement_begin__ = 110;
+            current_statement_begin__ = 111;
+            current_statement_begin__ = 112;
+            current_statement_begin__ = 113;
+            current_statement_begin__ = 114;
+            current_statement_begin__ = 115;
+            current_statement_begin__ = 116;
+            current_statement_begin__ = 117;
+            current_statement_begin__ = 118;
             check_greater_or_equal(function__,"s2",s2,0);
-            current_statement_begin__ = 12;
+            current_statement_begin__ = 119;
             check_greater_or_equal(function__,"N",N,0);
-            current_statement_begin__ = 13;
+            current_statement_begin__ = 120;
             // initialize data variables
-            current_statement_begin__ = 17;
+            current_statement_begin__ = 124;
             validate_non_negative_index("n", "k", k);
             n = vector_d(static_cast<Eigen::VectorXd::Index>(k));
             stan::math::fill(n,DUMMY_VAR__);
-            current_statement_begin__ = 18;
+            current_statement_begin__ = 125;
             validate_non_negative_index("b", "k", k);
             b = vector_d(static_cast<Eigen::VectorXd::Index>(k));
             stan::math::fill(b,DUMMY_VAR__);
-            current_statement_begin__ = 19;
+            current_statement_begin__ = 126;
             nplus = double(0);
             stan::math::fill(nplus,DUMMY_VAR__);
 
-            current_statement_begin__ = 21;
+            current_statement_begin__ = 128;
             stan::math::assign(n, divide(subtract(N,1.0),2.0));
-            current_statement_begin__ = 22;
+            current_statement_begin__ = 129;
             stan::math::assign(b, elt_multiply(s2,N));
-            current_statement_begin__ = 23;
+            current_statement_begin__ = 130;
             stan::math::assign(nplus, sum(n));
 
             // validate transformed data
-            current_statement_begin__ = 17;
+            current_statement_begin__ = 124;
             check_greater_or_equal(function__,"n",n,0);
-            current_statement_begin__ = 18;
+            current_statement_begin__ = 125;
             check_greater_or_equal(function__,"b",b,0);
-            current_statement_begin__ = 19;
+            current_statement_begin__ = 126;
 
             // validate, set parameter ranges
             num_params_r__ = 0U;
             param_ranges_i__.clear();
-            current_statement_begin__ = 27;
+            current_statement_begin__ = 134;
             ++num_params_r__;
-            current_statement_begin__ = 30;
+            current_statement_begin__ = 135;
             validate_non_negative_index("beta", "k", k);
             num_params_r__ += k;
-            current_statement_begin__ = 31;
-            validate_non_negative_index("lambda", "k", k);
-            num_params_r__ += k;
+            current_statement_begin__ = 136;
+            validate_non_negative_index("rho_unconstrained", "k", k);
+            num_params_r__ += (k - 1);
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
             // Next line prevents compiler griping about no return
@@ -298,19 +568,19 @@ public:
             throw std::runtime_error(std::string("Error transforming variable beta: ") + e.what());
         }
 
-        if (!(context__.contains_r("lambda")))
-            throw std::runtime_error("variable lambda missing");
-        vals_r__ = context__.vals_r("lambda");
+        if (!(context__.contains_r("rho_unconstrained")))
+            throw std::runtime_error("variable rho_unconstrained missing");
+        vals_r__ = context__.vals_r("rho_unconstrained");
         pos__ = 0U;
-        validate_non_negative_index("lambda", "k", k);
-        context__.validate_dims("initialization", "lambda", "vector_d", context__.to_vec(k));
-        vector_d lambda(static_cast<Eigen::VectorXd::Index>(k));
+        validate_non_negative_index("rho_unconstrained", "k", k);
+        context__.validate_dims("initialization", "rho_unconstrained", "vector_d", context__.to_vec(k));
+        vector_d rho_unconstrained(static_cast<Eigen::VectorXd::Index>(k));
         for (int j1__ = 0U; j1__ < k; ++j1__)
-            lambda(j1__) = vals_r__[pos__++];
+            rho_unconstrained(j1__) = vals_r__[pos__++];
         try {
-            writer__.vector_lb_unconstrain(0,lambda);
+            writer__.simplex_unconstrain(rho_unconstrained);
         } catch (const std::exception& e) { 
-            throw std::runtime_error(std::string("Error transforming variable lambda: ") + e.what());
+            throw std::runtime_error(std::string("Error transforming variable rho_unconstrained: ") + e.what());
         }
 
         params_r__ = writer__.data_r();
@@ -360,273 +630,37 @@ public:
             else
                 beta = in__.vector_lub_constrain(0,1,k);
 
-            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  lambda;
-            (void) lambda;  // dummy to suppress unused var warning
+            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  rho_unconstrained;
+            (void) rho_unconstrained;  // dummy to suppress unused var warning
             if (jacobian__)
-                lambda = in__.vector_lb_constrain(0,k,lp__);
+                rho_unconstrained = in__.simplex_constrain(k,lp__);
             else
-                lambda = in__.vector_lb_constrain(0,k);
+                rho_unconstrained = in__.simplex_constrain(k);
 
 
             // transformed parameters
-            current_statement_begin__ = 35;
+            current_statement_begin__ = 140;
             validate_non_negative_index("rho", "k", k);
             Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  rho(static_cast<Eigen::VectorXd::Index>(k));
             (void) rho;  // dummy to suppress unused var warning
 
             stan::math::initialize(rho, DUMMY_VAR__);
             stan::math::fill(rho,DUMMY_VAR__);
-            current_statement_begin__ = 37;
-            validate_non_negative_index("rlambda", "k", k);
-            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  rlambda(static_cast<Eigen::VectorXd::Index>(k));
-            (void) rlambda;  // dummy to suppress unused var warning
-
-            stan::math::initialize(rlambda, DUMMY_VAR__);
-            stan::math::fill(rlambda,DUMMY_VAR__);
 
 
-            current_statement_begin__ = 43;
+            current_statement_begin__ = 142;
             for (int i = 1; i <= k; ++i) {
 
-                current_statement_begin__ = 44;
-                stan::model::assign(rlambda, 
-                            stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            get_base1(lambda,((k + 1) - i),"lambda",1), 
-                            "assigning variable rlambda");
-            }
-            current_statement_begin__ = 47;
-            for (int i = 1; i <= k; ++i) {
-
-                current_statement_begin__ = 48;
+                current_statement_begin__ = 143;
                 stan::model::assign(rho, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            get_base1(rlambda,get_base1(index_vector,i,"index_vector",1),"rlambda",1), 
+                            get_base1(rho_unconstrained,get_base1(index_vector,i,"index_vector",1),"rho_unconstrained",1), 
                             "assigning variable rho");
             }
-            current_statement_begin__ = 51;
+            current_statement_begin__ = 146;
             stan::math::assign(rho, stan::model::deep_copy(divide(rho,sum(rho))));
-            {
-            current_statement_begin__ = 61;
-            int is_ordered(0);
-            (void) is_ordered;  // dummy to suppress unused var warning
-
-            stan::math::fill(is_ordered, std::numeric_limits<int>::min());
-            stan::math::assign(is_ordered,1);
-            current_statement_begin__ = 62;
-            int is_unconstrained(0);
-            (void) is_unconstrained;  // dummy to suppress unused var warning
-
-            stan::math::fill(is_unconstrained, std::numeric_limits<int>::min());
-            stan::math::assign(is_unconstrained,1);
-
-
-            current_statement_begin__ = 63;
-            for (int i = 1; i <= nr_rel; ++i) {
-
-                current_statement_begin__ = 64;
-                if (as_bool(logical_neq(get_base1(relations,i,"relations",1),2))) {
-
-                    current_statement_begin__ = 65;
-                    stan::math::assign(is_ordered, 0);
-                }
-            }
-            current_statement_begin__ = 69;
-            for (int i = 1; i <= nr_rel; ++i) {
-
-                current_statement_begin__ = 70;
-                if (as_bool(logical_neq(get_base1(relations,i,"relations",1),3))) {
-
-                    current_statement_begin__ = 71;
-                    stan::math::assign(is_unconstrained, 0);
-                }
-            }
-            current_statement_begin__ = 75;
-            if (as_bool(logical_negation(logical_eq(is_unconstrained,1)))) {
-
-                {
-                current_statement_begin__ = 77;
-                int i(0);
-                (void) i;  // dummy to suppress unused var warning
-
-                stan::math::fill(i, std::numeric_limits<int>::min());
-                current_statement_begin__ = 78;
-                int bi(0);
-                (void) bi;  // dummy to suppress unused var warning
-
-                stan::math::fill(bi, std::numeric_limits<int>::min());
-                current_statement_begin__ = 79;
-                int hi(0);
-                (void) hi;  // dummy to suppress unused var warning
-
-                stan::math::fill(hi, std::numeric_limits<int>::min());
-                current_statement_begin__ = 80;
-                int lo(0);
-                (void) lo;  // dummy to suppress unused var warning
-
-                stan::math::fill(lo, std::numeric_limits<int>::min());
-                current_statement_begin__ = 81;
-                int el(0);
-                (void) el;  // dummy to suppress unused var warning
-
-                stan::math::fill(el, std::numeric_limits<int>::min());
-                current_statement_begin__ = 82;
-                int cur(0);
-                (void) cur;  // dummy to suppress unused var warning
-
-                stan::math::fill(cur, std::numeric_limits<int>::min());
-                current_statement_begin__ = 83;
-                int rel(0);
-                (void) rel;  // dummy to suppress unused var warning
-
-                stan::math::fill(rel, std::numeric_limits<int>::min());
-                current_statement_begin__ = 84;
-                int prev(0);
-                (void) prev;  // dummy to suppress unused var warning
-
-                stan::math::fill(prev, std::numeric_limits<int>::min());
-                current_statement_begin__ = 85;
-                validate_non_negative_index("ubound", "k", k);
-                Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  ubound(static_cast<Eigen::VectorXd::Index>(k));
-                (void) ubound;  // dummy to suppress unused var warning
-
-                stan::math::initialize(ubound, DUMMY_VAR__);
-                stan::math::fill(ubound,DUMMY_VAR__);
-                current_statement_begin__ = 86;
-                validate_non_negative_index("lbound", "k", k);
-                Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  lbound(static_cast<Eigen::VectorXd::Index>(k));
-                (void) lbound;  // dummy to suppress unused var warning
-
-                stan::math::initialize(lbound, DUMMY_VAR__);
-                stan::math::fill(lbound,DUMMY_VAR__);
-                current_statement_begin__ = 87;
-                int nr_equals(0);
-                (void) nr_equals;  // dummy to suppress unused var warning
-
-                stan::math::fill(nr_equals, std::numeric_limits<int>::min());
-                current_statement_begin__ = 88;
-                int nr_equalities(0);
-                (void) nr_equalities;  // dummy to suppress unused var warning
-
-                stan::math::fill(nr_equalities, std::numeric_limits<int>::min());
-                current_statement_begin__ = 89;
-                int relation_between(0);
-                (void) relation_between;  // dummy to suppress unused var warning
-
-                stan::math::fill(relation_between, std::numeric_limits<int>::min());
-                current_statement_begin__ = 90;
-                int cur_constraint(0);
-                (void) cur_constraint;  // dummy to suppress unused var warning
-
-                stan::math::fill(cur_constraint, std::numeric_limits<int>::min());
-                current_statement_begin__ = 91;
-                int nr_unconstraint(0);
-                (void) nr_unconstraint;  // dummy to suppress unused var warning
-
-                stan::math::fill(nr_unconstraint, std::numeric_limits<int>::min());
-
-
-                current_statement_begin__ = 92;
-                stan::math::assign(bi, 1);
-                current_statement_begin__ = 93;
-                stan::math::assign(el, 1);
-                current_statement_begin__ = 94;
-                stan::math::assign(cur_constraint, 1);
-                current_statement_begin__ = 97;
-                while (as_bool(logical_lte(el,k))) {
-
-                    current_statement_begin__ = 100;
-                    stan::math::assign(hi, get_base1(get_base1(constraint_mat,cur_constraint,"constraint_mat",1),1,"constraint_mat",2));
-                    current_statement_begin__ = 101;
-                    stan::math::assign(lo, get_base1(get_base1(constraint_mat,cur_constraint,"constraint_mat",1),2,"constraint_mat",2));
-                    current_statement_begin__ = 103;
-                    if (as_bool(logical_eq(hi,-(1)))) {
-
-                        current_statement_begin__ = 104;
-                        stan::math::assign(ubound, rep_vector(1,k));
-                    } else {
-
-                        current_statement_begin__ = 106;
-                        stan::math::assign(ubound, rep_vector(1,k));
-                        current_statement_begin__ = 107;
-                        stan::model::assign(ubound, 
-                                    stan::model::cons_list(stan::model::index_min_max(1, hi), stan::model::nil_index_list()), 
-                                    stan::model::rvalue(rho, stan::model::cons_list(stan::model::index_min_max(1, hi), stan::model::nil_index_list()), "rho"), 
-                                    "assigning variable ubound");
-                    }
-                    current_statement_begin__ = 110;
-                    if (as_bool(logical_eq(lo,-(2)))) {
-
-                        current_statement_begin__ = 111;
-                        stan::math::assign(lbound, rep_vector(0,k));
-                    } else {
-
-                        current_statement_begin__ = 113;
-                        stan::math::assign(lbound, rep_vector(0,k));
-                        current_statement_begin__ = 114;
-                        stan::model::assign(lbound, 
-                                    stan::model::cons_list(stan::model::index_min_max(lo, k), stan::model::nil_index_list()), 
-                                    stan::model::rvalue(rho, stan::model::cons_list(stan::model::index_min_max(lo, k), stan::model::nil_index_list()), "rho"), 
-                                    "assigning variable lbound");
-                    }
-                    current_statement_begin__ = 118;
-                    if (as_bool((primitive_value(logical_eq(min(ubound),1.0)) && primitive_value(logical_eq(max(lbound),0.0))))) {
-
-                        current_statement_begin__ = 121;
-                        if (as_bool(logical_neq(get_base1(relations,el,"relations",1),3))) {
-
-                            current_statement_begin__ = 122;
-                            stan::model::assign(rho, 
-                                        stan::model::cons_list(stan::model::index_uni(el), stan::model::nil_index_list()), 
-                                        ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
-                                        "assigning variable rho");
-                        }
-                    } else {
-
-                        current_statement_begin__ = 126;
-                        stan::model::assign(rho, 
-                                    stan::model::cons_list(stan::model::index_uni(el), stan::model::nil_index_list()), 
-                                    ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
-                                    "assigning variable rho");
-                    }
-                    current_statement_begin__ = 132;
-                    stan::math::assign(i, 0);
-                    current_statement_begin__ = 133;
-                    stan::math::assign(nr_equalities, 0);
-                    current_statement_begin__ = 134;
-                    while (as_bool((primitive_value(logical_lt((el + i),k)) && primitive_value(logical_eq(get_base1(relations,(el + i),"relations",1),1))))) {
-
-                        current_statement_begin__ = 135;
-                        stan::math::assign(nr_equalities, stan::model::deep_copy((nr_equalities + 1)));
-                        current_statement_begin__ = 136;
-                        stan::math::assign(i, stan::model::deep_copy((i + 1)));
-                    }
-                    current_statement_begin__ = 140;
-                    for (int j = 1; j <= nr_equalities; ++j) {
-
-                        current_statement_begin__ = 141;
-                        stan::model::assign(rho, 
-                                    stan::model::cons_list(stan::model::index_uni((el + j)), stan::model::nil_index_list()), 
-                                    ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
-                                    "assigning variable rho");
-                    }
-                    current_statement_begin__ = 144;
-                    stan::math::assign(bi, stan::model::deep_copy((bi + 1)));
-                    current_statement_begin__ = 145;
-                    stan::math::assign(el, stan::model::deep_copy((el + nr_equalities)));
-                    current_statement_begin__ = 148;
-                    if (as_bool((primitive_value(logical_lte((el + 1),k)) && primitive_value(logical_eq(get_base1(relations,el,"relations",1),2))))) {
-
-                        current_statement_begin__ = 149;
-                        stan::math::assign(cur_constraint, stan::model::deep_copy((cur_constraint + 1)));
-                    }
-                    current_statement_begin__ = 152;
-                    stan::math::assign(el, stan::model::deep_copy((el + 1)));
-                }
-                }
-            }
-            }
-            current_statement_begin__ = 158;
-            stan::math::assign(rho, stan::model::deep_copy(divide(rho,sum(rho))));
+            current_statement_begin__ = 154;
+            stan::math::assign(rho, stan::model::deep_copy(order_parameters(rho,beta,k,nr_rel,relations,constraint_mat, pstream__)));
 
             // validate transformed parameters
             for (int i0__ = 0; i0__ < k; ++i0__) {
@@ -636,30 +670,22 @@ public:
                     throw std::runtime_error(msg__.str());
                 }
             }
-            for (int i0__ = 0; i0__ < k; ++i0__) {
-                if (stan::math::is_uninitialized(rlambda(i0__))) {
-                    std::stringstream msg__;
-                    msg__ << "Undefined transformed parameter: rlambda" << '[' << i0__ << ']';
-                    throw std::runtime_error(msg__.str());
-                }
-            }
 
             const char* function__ = "validate transformed params";
             (void) function__;  // dummy to suppress unused var warning
-            current_statement_begin__ = 35;
+            current_statement_begin__ = 140;
             stan::math::check_simplex(function__,"rho",rho);
-            current_statement_begin__ = 37;
 
             // model body
 
-            current_statement_begin__ = 162;
+            current_statement_begin__ = 158;
             lp_accum__.add(-(stan::math::log(tau)));
-            current_statement_begin__ = 163;
-            lp_accum__.add(gamma_log(lambda,alpha,1));
-            current_statement_begin__ = 165;
+            current_statement_begin__ = 159;
+            lp_accum__.add(dirichlet_log(rho_unconstrained,rep_vector(alpha,k)));
+            current_statement_begin__ = 162;
             if (as_bool(logical_negation(logical_eq(priors_only,1)))) {
 
-                current_statement_begin__ = 166;
+                current_statement_begin__ = 163;
                 lp_accum__.add((((((((k - sum(N)) / 2) * stan::math::log((2 * stan::math::pi()))) + dot_product(rep_vector(-(0.5),k),stan::math::log(N))) + (nplus * stan::math::log((tau * k)))) + dot_product(n,stan::math::log(rho))) - ((k * tau) * dot_product(divide(b,2),rho))));
             }
 
@@ -690,9 +716,8 @@ public:
         names__.resize(0);
         names__.push_back("tau");
         names__.push_back("beta");
-        names__.push_back("lambda");
+        names__.push_back("rho_unconstrained");
         names__.push_back("rho");
-        names__.push_back("rlambda");
     }
 
 
@@ -700,9 +725,6 @@ public:
         dimss__.resize(0);
         std::vector<size_t> dims__;
         dims__.resize(0);
-        dimss__.push_back(dims__);
-        dims__.resize(0);
-        dims__.push_back(k);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(k);
@@ -732,13 +754,13 @@ public:
         // read-transform, write parameters
         double tau = in__.scalar_lb_constrain(0);
         vector_d beta = in__.vector_lub_constrain(0,1,k);
-        vector_d lambda = in__.vector_lb_constrain(0,k);
+        vector_d rho_unconstrained = in__.simplex_constrain(k);
         vars__.push_back(tau);
             for (int k_0__ = 0; k_0__ < k; ++k_0__) {
             vars__.push_back(beta[k_0__]);
             }
             for (int k_0__ = 0; k_0__ < k; ++k_0__) {
-            vars__.push_back(lambda[k_0__]);
+            vars__.push_back(rho_unconstrained[k_0__]);
             }
 
         // declare and define transformed parameters
@@ -750,277 +772,37 @@ public:
         (void) DUMMY_VAR__;  // suppress unused var warning
 
         try {
-            current_statement_begin__ = 35;
+            current_statement_begin__ = 140;
             validate_non_negative_index("rho", "k", k);
             Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  rho(static_cast<Eigen::VectorXd::Index>(k));
             (void) rho;  // dummy to suppress unused var warning
 
             stan::math::initialize(rho, DUMMY_VAR__);
             stan::math::fill(rho,DUMMY_VAR__);
-            current_statement_begin__ = 37;
-            validate_non_negative_index("rlambda", "k", k);
-            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  rlambda(static_cast<Eigen::VectorXd::Index>(k));
-            (void) rlambda;  // dummy to suppress unused var warning
-
-            stan::math::initialize(rlambda, DUMMY_VAR__);
-            stan::math::fill(rlambda,DUMMY_VAR__);
 
 
-            current_statement_begin__ = 43;
+            current_statement_begin__ = 142;
             for (int i = 1; i <= k; ++i) {
 
-                current_statement_begin__ = 44;
-                stan::model::assign(rlambda, 
-                            stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            get_base1(lambda,((k + 1) - i),"lambda",1), 
-                            "assigning variable rlambda");
-            }
-            current_statement_begin__ = 47;
-            for (int i = 1; i <= k; ++i) {
-
-                current_statement_begin__ = 48;
+                current_statement_begin__ = 143;
                 stan::model::assign(rho, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            get_base1(rlambda,get_base1(index_vector,i,"index_vector",1),"rlambda",1), 
+                            get_base1(rho_unconstrained,get_base1(index_vector,i,"index_vector",1),"rho_unconstrained",1), 
                             "assigning variable rho");
             }
-            current_statement_begin__ = 51;
+            current_statement_begin__ = 146;
             stan::math::assign(rho, stan::model::deep_copy(divide(rho,sum(rho))));
-            {
-            current_statement_begin__ = 61;
-            int is_ordered(0);
-            (void) is_ordered;  // dummy to suppress unused var warning
-
-            stan::math::fill(is_ordered, std::numeric_limits<int>::min());
-            stan::math::assign(is_ordered,1);
-            current_statement_begin__ = 62;
-            int is_unconstrained(0);
-            (void) is_unconstrained;  // dummy to suppress unused var warning
-
-            stan::math::fill(is_unconstrained, std::numeric_limits<int>::min());
-            stan::math::assign(is_unconstrained,1);
-
-
-            current_statement_begin__ = 63;
-            for (int i = 1; i <= nr_rel; ++i) {
-
-                current_statement_begin__ = 64;
-                if (as_bool(logical_neq(get_base1(relations,i,"relations",1),2))) {
-
-                    current_statement_begin__ = 65;
-                    stan::math::assign(is_ordered, 0);
-                }
-            }
-            current_statement_begin__ = 69;
-            for (int i = 1; i <= nr_rel; ++i) {
-
-                current_statement_begin__ = 70;
-                if (as_bool(logical_neq(get_base1(relations,i,"relations",1),3))) {
-
-                    current_statement_begin__ = 71;
-                    stan::math::assign(is_unconstrained, 0);
-                }
-            }
-            current_statement_begin__ = 75;
-            if (as_bool(logical_negation(logical_eq(is_unconstrained,1)))) {
-
-                {
-                current_statement_begin__ = 77;
-                int i(0);
-                (void) i;  // dummy to suppress unused var warning
-
-                stan::math::fill(i, std::numeric_limits<int>::min());
-                current_statement_begin__ = 78;
-                int bi(0);
-                (void) bi;  // dummy to suppress unused var warning
-
-                stan::math::fill(bi, std::numeric_limits<int>::min());
-                current_statement_begin__ = 79;
-                int hi(0);
-                (void) hi;  // dummy to suppress unused var warning
-
-                stan::math::fill(hi, std::numeric_limits<int>::min());
-                current_statement_begin__ = 80;
-                int lo(0);
-                (void) lo;  // dummy to suppress unused var warning
-
-                stan::math::fill(lo, std::numeric_limits<int>::min());
-                current_statement_begin__ = 81;
-                int el(0);
-                (void) el;  // dummy to suppress unused var warning
-
-                stan::math::fill(el, std::numeric_limits<int>::min());
-                current_statement_begin__ = 82;
-                int cur(0);
-                (void) cur;  // dummy to suppress unused var warning
-
-                stan::math::fill(cur, std::numeric_limits<int>::min());
-                current_statement_begin__ = 83;
-                int rel(0);
-                (void) rel;  // dummy to suppress unused var warning
-
-                stan::math::fill(rel, std::numeric_limits<int>::min());
-                current_statement_begin__ = 84;
-                int prev(0);
-                (void) prev;  // dummy to suppress unused var warning
-
-                stan::math::fill(prev, std::numeric_limits<int>::min());
-                current_statement_begin__ = 85;
-                validate_non_negative_index("ubound", "k", k);
-                Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  ubound(static_cast<Eigen::VectorXd::Index>(k));
-                (void) ubound;  // dummy to suppress unused var warning
-
-                stan::math::initialize(ubound, DUMMY_VAR__);
-                stan::math::fill(ubound,DUMMY_VAR__);
-                current_statement_begin__ = 86;
-                validate_non_negative_index("lbound", "k", k);
-                Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  lbound(static_cast<Eigen::VectorXd::Index>(k));
-                (void) lbound;  // dummy to suppress unused var warning
-
-                stan::math::initialize(lbound, DUMMY_VAR__);
-                stan::math::fill(lbound,DUMMY_VAR__);
-                current_statement_begin__ = 87;
-                int nr_equals(0);
-                (void) nr_equals;  // dummy to suppress unused var warning
-
-                stan::math::fill(nr_equals, std::numeric_limits<int>::min());
-                current_statement_begin__ = 88;
-                int nr_equalities(0);
-                (void) nr_equalities;  // dummy to suppress unused var warning
-
-                stan::math::fill(nr_equalities, std::numeric_limits<int>::min());
-                current_statement_begin__ = 89;
-                int relation_between(0);
-                (void) relation_between;  // dummy to suppress unused var warning
-
-                stan::math::fill(relation_between, std::numeric_limits<int>::min());
-                current_statement_begin__ = 90;
-                int cur_constraint(0);
-                (void) cur_constraint;  // dummy to suppress unused var warning
-
-                stan::math::fill(cur_constraint, std::numeric_limits<int>::min());
-                current_statement_begin__ = 91;
-                int nr_unconstraint(0);
-                (void) nr_unconstraint;  // dummy to suppress unused var warning
-
-                stan::math::fill(nr_unconstraint, std::numeric_limits<int>::min());
-
-
-                current_statement_begin__ = 92;
-                stan::math::assign(bi, 1);
-                current_statement_begin__ = 93;
-                stan::math::assign(el, 1);
-                current_statement_begin__ = 94;
-                stan::math::assign(cur_constraint, 1);
-                current_statement_begin__ = 97;
-                while (as_bool(logical_lte(el,k))) {
-
-                    current_statement_begin__ = 100;
-                    stan::math::assign(hi, get_base1(get_base1(constraint_mat,cur_constraint,"constraint_mat",1),1,"constraint_mat",2));
-                    current_statement_begin__ = 101;
-                    stan::math::assign(lo, get_base1(get_base1(constraint_mat,cur_constraint,"constraint_mat",1),2,"constraint_mat",2));
-                    current_statement_begin__ = 103;
-                    if (as_bool(logical_eq(hi,-(1)))) {
-
-                        current_statement_begin__ = 104;
-                        stan::math::assign(ubound, rep_vector(1,k));
-                    } else {
-
-                        current_statement_begin__ = 106;
-                        stan::math::assign(ubound, rep_vector(1,k));
-                        current_statement_begin__ = 107;
-                        stan::model::assign(ubound, 
-                                    stan::model::cons_list(stan::model::index_min_max(1, hi), stan::model::nil_index_list()), 
-                                    stan::model::rvalue(rho, stan::model::cons_list(stan::model::index_min_max(1, hi), stan::model::nil_index_list()), "rho"), 
-                                    "assigning variable ubound");
-                    }
-                    current_statement_begin__ = 110;
-                    if (as_bool(logical_eq(lo,-(2)))) {
-
-                        current_statement_begin__ = 111;
-                        stan::math::assign(lbound, rep_vector(0,k));
-                    } else {
-
-                        current_statement_begin__ = 113;
-                        stan::math::assign(lbound, rep_vector(0,k));
-                        current_statement_begin__ = 114;
-                        stan::model::assign(lbound, 
-                                    stan::model::cons_list(stan::model::index_min_max(lo, k), stan::model::nil_index_list()), 
-                                    stan::model::rvalue(rho, stan::model::cons_list(stan::model::index_min_max(lo, k), stan::model::nil_index_list()), "rho"), 
-                                    "assigning variable lbound");
-                    }
-                    current_statement_begin__ = 118;
-                    if (as_bool((primitive_value(logical_eq(min(ubound),1.0)) && primitive_value(logical_eq(max(lbound),0.0))))) {
-
-                        current_statement_begin__ = 121;
-                        if (as_bool(logical_neq(get_base1(relations,el,"relations",1),3))) {
-
-                            current_statement_begin__ = 122;
-                            stan::model::assign(rho, 
-                                        stan::model::cons_list(stan::model::index_uni(el), stan::model::nil_index_list()), 
-                                        ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
-                                        "assigning variable rho");
-                        }
-                    } else {
-
-                        current_statement_begin__ = 126;
-                        stan::model::assign(rho, 
-                                    stan::model::cons_list(stan::model::index_uni(el), stan::model::nil_index_list()), 
-                                    ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
-                                    "assigning variable rho");
-                    }
-                    current_statement_begin__ = 132;
-                    stan::math::assign(i, 0);
-                    current_statement_begin__ = 133;
-                    stan::math::assign(nr_equalities, 0);
-                    current_statement_begin__ = 134;
-                    while (as_bool((primitive_value(logical_lt((el + i),k)) && primitive_value(logical_eq(get_base1(relations,(el + i),"relations",1),1))))) {
-
-                        current_statement_begin__ = 135;
-                        stan::math::assign(nr_equalities, stan::model::deep_copy((nr_equalities + 1)));
-                        current_statement_begin__ = 136;
-                        stan::math::assign(i, stan::model::deep_copy((i + 1)));
-                    }
-                    current_statement_begin__ = 140;
-                    for (int j = 1; j <= nr_equalities; ++j) {
-
-                        current_statement_begin__ = 141;
-                        stan::model::assign(rho, 
-                                    stan::model::cons_list(stan::model::index_uni((el + j)), stan::model::nil_index_list()), 
-                                    ((get_base1(beta,bi,"beta",1) * (min(ubound) - max(lbound))) + max(lbound)), 
-                                    "assigning variable rho");
-                    }
-                    current_statement_begin__ = 144;
-                    stan::math::assign(bi, stan::model::deep_copy((bi + 1)));
-                    current_statement_begin__ = 145;
-                    stan::math::assign(el, stan::model::deep_copy((el + nr_equalities)));
-                    current_statement_begin__ = 148;
-                    if (as_bool((primitive_value(logical_lte((el + 1),k)) && primitive_value(logical_eq(get_base1(relations,el,"relations",1),2))))) {
-
-                        current_statement_begin__ = 149;
-                        stan::math::assign(cur_constraint, stan::model::deep_copy((cur_constraint + 1)));
-                    }
-                    current_statement_begin__ = 152;
-                    stan::math::assign(el, stan::model::deep_copy((el + 1)));
-                }
-                }
-            }
-            }
-            current_statement_begin__ = 158;
-            stan::math::assign(rho, stan::model::deep_copy(divide(rho,sum(rho))));
+            current_statement_begin__ = 154;
+            stan::math::assign(rho, stan::model::deep_copy(order_parameters(rho,beta,k,nr_rel,relations,constraint_mat, pstream__)));
 
             // validate transformed parameters
-            current_statement_begin__ = 35;
+            current_statement_begin__ = 140;
             stan::math::check_simplex(function__,"rho",rho);
-            current_statement_begin__ = 37;
 
             // write transformed parameters
             if (include_tparams__) {
             for (int k_0__ = 0; k_0__ < k; ++k_0__) {
             vars__.push_back(rho[k_0__]);
-            }
-            for (int k_0__ = 0; k_0__ < k; ++k_0__) {
-            vars__.push_back(rlambda[k_0__]);
             }
             }
             if (!include_gqs__) return;
@@ -1075,7 +857,7 @@ public:
         }
         for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "lambda" << '.' << k_0__;
+            param_name_stream__ << "rho_unconstrained" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
 
@@ -1085,11 +867,6 @@ public:
             for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
                 param_name_stream__.str(std::string());
                 param_name_stream__ << "rho" << '.' << k_0__;
-                param_names__.push_back(param_name_stream__.str());
-            }
-            for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
-                param_name_stream__.str(std::string());
-                param_name_stream__ << "rlambda" << '.' << k_0__;
                 param_names__.push_back(param_name_stream__.str());
             }
         }
@@ -1111,9 +888,9 @@ public:
             param_name_stream__ << "beta" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
-        for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
+        for (int k_0__ = 1; k_0__ <= (k - 1); ++k_0__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "lambda" << '.' << k_0__;
+            param_name_stream__ << "rho_unconstrained" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
 
@@ -1123,11 +900,6 @@ public:
             for (int k_0__ = 1; k_0__ <= (k - 1); ++k_0__) {
                 param_name_stream__.str(std::string());
                 param_name_stream__ << "rho" << '.' << k_0__;
-                param_names__.push_back(param_name_stream__.str());
-            }
-            for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
-                param_name_stream__.str(std::string());
-                param_name_stream__ << "rlambda" << '.' << k_0__;
                 param_names__.push_back(param_name_stream__.str());
             }
         }

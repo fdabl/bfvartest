@@ -1,63 +1,8 @@
-data {
-  int k;
-  real alpha;
-  int nr_rel;
-  int nr_free;
-  int nr_equal;
-  int nr_ordered;
-  int index_vector[k];
-  int relations[nr_rel];
-  int constraint_mat[nr_ordered + 1, 2];
-  vector<lower = 0>[k] s2;
-  vector<lower = 0>[k] N;
-  int priors_only;
-}
+functions {
 
-transformed data {
-  vector<lower = 0>[k] n;
-  vector<lower = 0>[k] b;
-  real nplus;
+  vector order_parameters(vector rho, vector beta, int k, int nr_rel, int[] relations, int[,] constraint_mat) {
+    vector[k] sorted_rho = rho;
 
-  n = (N - 1.0) / 2.0;
-  b = s2 .* N;
-  nplus = sum(n);
-}
-
-parameters {
-  real<lower=0> tau;
-  // vector<lower=0, upper=1>[k - nr_equal] beta;
-  // vector<lower=0>[k - nr_equal] lambda;
-  vector<lower=0, upper=1>[k] beta;
-  vector<lower=0>[k] lambda;
-}
-
-transformed parameters {
-  simplex[k] rho;
-  // vector[k - nr_equal] rlambda;
-  vector[k] rlambda;
-
-  // for (i in 1:(k - nr_equal)) {
-  //   rlambda[i] = lambda[k - nr_equal + 1 - i];
-  // }
-
-  for (i in 1:k) {
-    rlambda[i] = lambda[k + 1 - i];
-  }
-
-  for (i in 1:k) {
-    rho[i] = rlambda[index_vector[i]];
-  }
-
-  rho = rho / sum(rho);
-
-  // "1,2>3>4"
-  // rho[1] = beta[1] * (1 - max(rho[3:4])) + max(rho[3:4]);
-  // rho[2] = beta[2] * (1 - max(rho[3:4])) + max(rho[3:4]);
-  // rho[3] = beta[3] * (min(rho[1:2]) - rho[4]) + rho[4];
-  // rho[4] = beta[4] * (min(rho[1:3]) - 0) + 0;
-
-  {
-    // check whether all constraints are order constraints; TODO: Can be nicer!
     int is_ordered = 1;
     int is_unconstrained = 1;
     for (i in 1:nr_rel) {
@@ -97,36 +42,34 @@ transformed parameters {
         while (el <= k) {
 
           // find the upper and lower constraints of the current element
-          hi = constraint_mat[cur_constraint, 1];
-          lo = constraint_mat[cur_constraint, 2];
+          lo = constraint_mat[cur_constraint, 1];
+          hi = constraint_mat[cur_constraint, 2];
 
-          if (hi == -1) {
-            ubound = rep_vector(1, k);
+          if (lo == -99) {
+            lbound = rep_vector(0, k);
           } else {
-            ubound = rep_vector(1, k);
-            ubound[1:hi] = rho[1:hi];
+            lbound = rep_vector(0, k);
+            lbound[lo:k] = sorted_rho[lo:k];
           }
 
-          if (lo == -2) {
-            lbound = rep_vector(0, k);
+          if (hi == -99) {
+            ubound = rep_vector(1, k);
           } else {
-            lbound = rep_vector(0, k);
-            lbound[lo:k] = rho[lo:k];
+            ubound = rep_vector(1, k);
+            ubound[1:hi] = sorted_rho[1:hi];
           }
 
           // the element has NO constraints!
           if (min(ubound) == 1.0 && max(lbound) == 0.0) {
 
-            // if the relationship is NOT e.g. 1,2, then do update!
+            // if the relationship is NOT unconstrained (e.g., 1,2) then do update!
             if (relations[el] != 3) {
-              rho[el] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
+              sorted_rho[el] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
             }
 
           } else {
-            rho[el] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
+            sorted_rho[el] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
           }
-
-          // rho[el] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
 
           // check whether elements are equal, and if so, how many
           i = 0;
@@ -138,7 +81,7 @@ transformed parameters {
 
           // bulk update the contraints for elements that are equal
           for (j in 1:nr_equalities) {
-            rho[el + j] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
+            sorted_rho[el + j] = beta[bi] * (min(ubound) - max(lbound)) + max(lbound);
           }
 
           bi = bi + 1;
@@ -153,14 +96,64 @@ transformed parameters {
         }
       }
     }
+
+    sorted_rho = sorted_rho / sum(sorted_rho);
+    return sorted_rho;
+  }
+}
+
+data {
+  int k;
+  real alpha;
+  int nr_rel;
+  int nr_free;
+  int nr_equal;
+  int nr_ordered;
+  int index_vector[k];
+  int relations[nr_rel];
+  int constraint_mat[nr_ordered + 1, 2];
+  vector<lower = 0>[k] s2;
+  vector<lower = 0>[k] N;
+  int priors_only;
+}
+
+transformed data {
+  vector<lower = 0>[k] n;
+  vector<lower = 0>[k] b;
+  real nplus;
+
+  n = (N - 1.0) / 2.0;
+  b = s2 .* N;
+  nplus = sum(n);
+}
+
+parameters {
+  real<lower=0> tau;
+  vector<lower=0, upper=1>[k] beta;
+  simplex[k] rho_unconstrained;
+}
+
+transformed parameters {
+  simplex[k] rho;
+
+  for (i in 1:k) {
+    rho[i] = rho_unconstrained[index_vector[i]];
   }
 
   rho = rho / sum(rho);
+
+  // "1,2>3>4"
+  // rho[1] = beta[1] * (1 - max(rho[3:4])) + max(rho[3:4]);
+  // rho[2] = beta[2] * (1 - max(rho[3:4])) + max(rho[3:4]);
+  // rho[3] = beta[3] * (min(rho[1:2]) - rho[4]) + rho[4];
+  // rho[4] = beta[4] * (min(rho[1:3]) - 0) + 0;
+
+  rho = order_parameters(rho, beta, k, nr_rel, relations, constraint_mat);
 }
 
 model{
   target += -log(tau);
-  target += gamma_lpdf(lambda | alpha, 1);
+  target += dirichlet_lpdf(rho_unconstrained | rep_vector(alpha, k));
 
   if (!(priors_only == 1)) {
       target += (

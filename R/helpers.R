@@ -45,7 +45,7 @@
     if (i == 1) {
 
       # First element does not have a lower constraint
-      prev <- -1
+      prev <- -99
 
       # Upper constraint is the first element of the next ordered block
       nnext <- ordered_blocks[i + 1]
@@ -53,7 +53,7 @@
     } else if (i == length(ordered_blocks)) {
 
       # Last element does not have an upper constraint
-      nnext <- -2
+      nnext <- -99
 
       # Lower constraint is the last element of the previous ordered block
       prev <- ordered_blocks[i - 1]
@@ -68,13 +68,15 @@
       # Upper constraint is the last element of the previous ordered block
       nnext <- ordered_blocks[i + 1]
     }
-    constraint_mat[row, ] <- as.numeric(cbind(prev, nnext))
+
+    # since our constraints are of the form '1>2'
+    constraint_mat[row, ] <- as.numeric(cbind(nnext, prev))
     row <- row + 1
   }
 
   # If the ordered block is of length one, we do not have any order-constraints!
   if (length(ordered_blocks) == 1) {
-    constraint_mat <- matrix(c(-1, -2), 1, 2)
+    constraint_mat <- matrix(c(-99, -99), 1, 2)
   }
 
   constraint_mat
@@ -127,7 +129,7 @@
     }
   }
 
-  stan_dat <- list(
+  standat <- list(
     k = k, s2 = ss,
     N = ns, alpha = a,
     index_vector = index_vector,
@@ -136,7 +138,17 @@
     nr_equal = nr_equal, nr_ordered = nr_ordered, nr_free = nr_free
   )
 
-  stan_dat
+  # hack so that it works with only two groups (for testing)
+  if (standat$nr_rel == 1) {
+    standat$nr_rel <- 2
+    if (standat$relations[1] == 3) {
+      standat$relations <- c(standat$relations, 3)
+    } else {
+      standat$relations <- c(standat$relations, -99)
+    }
+  }
+
+  standat
 }
 
 
@@ -144,7 +156,7 @@
 #' Estimates the model using Stan and computes the marginal likelihood
 #'
 #' @params hypothesis a string specifying the hypothesis
-#' @params prec a vector containing sample precisions
+#' @params ss a vector containing sample sum of squares
 #' @params ns a vector containing sample sizes
 #' @params a a vector specifying the value of the parameters of the Dirichlet prior
 #' @params compute_ml a logical specifying whether the marginal likelihood should be computes
@@ -153,21 +165,16 @@
 #' @params ... arguments to rstan::sampling
 #'
 #' @returns the log marginal likelihood (and samples if specified) of the hypothesis
-.create_levene_object <- function(hyp, ns, prec, a, compute_ml = TRUE, priors_only = FALSE, ...) {
+.create_levene_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, ...) {
 
-  stan_dat <- .prepare_standat(hyp, ns, prec, a, priors_only = priors_only)
 
-  # hack so that it works with only two groups (for testing)
-  if (stan_dat$nr_rel == 1) {
-    stan_dat$nr_rel <- 2
-    if (stan_dat$relations[1] == 3) {
-      stan_dat$relations <- c(stan_dat$relations, 3)
-    } else {
-      stan_dat$relations <- c(stan_dat$relations, -99)
-    }
+  if (hyp == 'ord') {
+    standat <- .prepare_standat('1>2', ns, rev(ss), a, priors_only = priors_only)
+    stanres <- rstan::sampling(stanmodels$BayesLeveneOrdered, data = standat, ...)
+  } else {
+    standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
+    stanres <- rstan::sampling(stanmodels$BayesLevene, data = standat, ...)
   }
-
-  stanres <- rstan::sampling(stanmodels$BayesLevene, data = stan_dat, ...)
 
   if (!compute_ml) {
     return(list(

@@ -19,14 +19,14 @@ test_that('Function stops if wrong interval input', {
 
 
 test_that('Two-sample Test Gives Expected Result', {
-  expect_true(Rmpfr::asNumeric(two_sample(100, 100, 1, 1, 0.5)) < 0)
-  expect_true(Rmpfr::asNumeric(two_sample(100, 100, 1, 2, 0.5)) > 0)
+  expect_true(two_sample(100, 100, 1, 1, 0.5) < 0)
+  expect_true(two_sample(100, 100, 1, 2, 0.5) > 0)
 
   # 2 is larger than 1
-  expect_true(Rmpfr::asNumeric(two_sample(100, 100, 1, 2, 0.5, alternative_interval = c(1, Inf))) > 0)
+  expect_true(two_sample(100, 100, 1, 2, 0.5, alternative_interval = c(1, Inf)) > 0)
 
   # 1 is larger than 2
-  expect_true(Rmpfr::asNumeric(two_sample(100, 100, 1, 2, 0.5, alternative_interval = c(0, 1))) < 0)
+  expect_true(two_sample(100, 100, 1, 2, 0.5, alternative_interval = c(0, 1)) < 0)
 })
 
 
@@ -40,11 +40,10 @@ test_that('Constrained matrix works', {
 
 test_that('Group sizes K > 9 work', {
   hyp <- c('1>2>3>4>5>6>7>8>9>10>11>12')
-  lower <- c(-1, seq(11))
-  upper <- c(seq(2, 12), -2)
+  lower <- c(seq(2, 12), -99)
+  upper <- c(-99, seq(11))
   expect_true(all(.create_constraint_matrix(hyp) == cbind(lower, upper)))
 })
-
 
 
 context('K > 2 Sample Test')
@@ -56,40 +55,45 @@ test_that('k_sample errors correctly', {
   expect_error(k_sample(c('1>2>3', '1=2=3'), ns[-1], ss, alpha = 0.50))
 })
 
+
 test_that('k_sample gives same result as (undirected) two_sample for K = 2', {
   ss <- c(1, 2)
-  prec <- 1/ss
   ns <- c(100, 100)
   hyp <- c('1,2', '1=2')
 
-  res <- k_sample(hyp, ns, prec, alpha = 0.50)
-  bf10 <- Rmpfr::asNumeric(two_sample(ns[1], ns[2], ss[1], ss[2]))
+  res <- k_sample(hyp, ns, ss, alpha = 0.50)
+  bf10 <- two_sample(ns[1], ns[2], ss[1], ss[2])
   expect_true(abs(res$BF[1, 2] - bf10) < .1)
 })
 
 
 test_that('k_sample gives same result as (directed) two_sample for K = 2', {
   ss <- c(1, 2)
-  prec <- 1/ss
   ns <- c(100, 100)
-  hyp <- c('1,2', '1=2', '1>2')
+  hyp <- c('1,2', '1>2', 'ord')
 
-  bf10 <- Rmpfr::asNumeric(two_sample(ns[1], ns[2], ss[1], ss[2]))
-  bfr0 <- Rmpfr::asNumeric(two_sample(ns[1], ns[2], ss[1], ss[2], alternative_interval = c(1, Inf)))
+  bf10 <- two_sample(ns[1], ns[2], ss[1], ss[2])
+  bfr0 <- two_sample(ns[1], ns[2], ss[1], ss[2], alternative_interval = c(1, Inf))
   bfr1 <- bfr0 - bf10
 
-  res <- k_sample(hyp, ns, prec, alpha = 0.50)
-  expect_true(abs(res$BF[1, 2] - bf10) < .01)
+  res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE, iter = 10000)
+  expect_true(abs(res$BF[2, 1] - bfr1) < .1)
 })
 
-
-
-  # tau <- extract(res[[1]]$fit, 'tau')$tau
-  # rho <- extract(res[[1]]$fit, 'rho')$rho
-  #
-  # tau1 <- 2 * tau * rho[, 1]
-  # sigma1 <- sqrt(1 / tau1)
-  # delta <- sqrt(rho[, 1] / rho[, 2])
+#
+# fit1 <- res[[1]]$fit
+# rho <- extract(fit1, 'rho')$rho
+# rhou <- extract(fit1, 'rho_unconstrained')$rho_unconstrained
+#
+# fit2 <- res[[2]]$fit
+# rho2 <- extract(fit2, 'rho')$rho
+# rhou2 <- extract(fit2, 'rho_unconstrained')$rho_unconstrained
+#
+# standat1 <- .prepare_standat(hyp[1], ns, ss, a)
+# standat2 <- .prepare_standat(hyp[2], ns, ss, a)
+# stanres1 <- rstan::sampling(stanmodels$BayesLevene, data = standat1)
+# stanres2 <- rstan::sampling(stanmodels$BayesLevene, data = standat2)
+# res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE)
 
 test_that('All cases work for K = 3', {
   ss <- c(1, 2, 3)

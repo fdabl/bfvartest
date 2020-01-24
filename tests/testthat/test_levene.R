@@ -1,3 +1,4 @@
+library('rstan')
 library('BayesLevene')
 
 
@@ -31,14 +32,23 @@ test_that('Two-sample Test Gives Expected Result', {
 
 
 context('K > 2 Sample Helper Functions')
-test_that('Constrained matrix works', {
+test_that('Constrained matrix errors expectedly', {
   expect_error(.create_constraint_matrix('2>1')) # needs to be ascending
   expect_error(.create_constraint_matrix('1<2')) # < not allowed
   expect_error(.create_constraint_matrix('1u2,3>4')) # u not allowed
 })
 
+test_that('Constrained matrix handles mixed hypotheses', {
+  hyp <- '1,2>3=4>5>6=7=8>9'
+  cmat <- .create_constraint_matrix(hyp)
+  emat <- cbind(
+    c(3, 5, 6, 9, -99), # lower constraints
+    c(-99, 2, 4, 5, 8) # upper constraints
+  )
+  expect_true(all(cmat == emat))
+})
 
-test_that('Group sizes K > 9 work', {
+test_that('Group sizes K > 9 constraints work', {
   hyp <- c('1>2>3>4>5>6>7>8>9>10>11>12')
   lower <- c(seq(2, 12), -99)
   upper <- c(-99, seq(11))
@@ -47,6 +57,38 @@ test_that('Group sizes K > 9 work', {
 
 
 context('K > 2 Sample Test')
+test_that('Stan order_parameters function works', {
+  rstan::expose_stan_functions(stanmodels$BayesLevene)
+
+  get_oparams <- function(hyp, k) {
+    rho <- runif(k)
+    beta <- runif(k)
+    rho <- rho / sum(rho)
+
+    standat <- .prepare_standat(hyp, rep(100, k), rep(1, k), .50)
+    cmat <- lapply(1:nrow(standat$constraint_mat), function(i) standat$constraint_mat[i, ])
+    order_parameters(
+      rho, beta, length(rho), nr_rel = standat$nr_rel,
+      relations = standat$relations, constraint_mat = cmat
+    )
+  }
+
+  r <- get_oparams('1>2>3>4', 4)
+  expect_true(r[1] > r[2] && r[2] > r[3] && r[3] > r[4])
+
+  r <- get_oparams('1=2=3=4', 4)
+  expect_true(all(r == 1/4))
+
+  r <- get_oparams('1,2,3,4', 4)
+  expect_true(all(diff(r) != 0) && sum(r) == 1)
+
+  r <- get_oparams('1,2>3=4>5>6=7=8>9', 9)
+  expect_true(
+    r[1] != r[2] && r[1] > r[3] && r[2] > r[3] && r[3] == r[4] &&
+    r[4] > r[5] && r[5] > r[6] && r[6] == r[7] && r[7] == r[8] && r[8] > r[9]
+  )
+})
+
 test_that('k_sample errors correctly', {
   ss <- c(1, 2, 3)
   ns <- c(100, 100, 100)

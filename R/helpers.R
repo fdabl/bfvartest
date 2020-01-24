@@ -38,6 +38,7 @@
   # Split the hypothesis into ordered blocks, initialize constraints between these blocks
   ordered_blocks <- strsplit(hyp, '>')[[1]]
   constraint_mat <- matrix(NA, nrow = length(ordered_blocks), ncol = 2)
+  is_digit <- function(x) suppressWarnings(!is.na(as.numeric(x)))
 
   row <- 1
   for (i in seq(1, length(ordered_blocks))) {
@@ -45,32 +46,35 @@
     if (i == 1) {
 
       # First element does not have a lower constraint
-      prev <- -99
+      prev_el <- -99
 
       # Upper constraint is the first element of the next ordered block
-      nnext <- ordered_blocks[i + 1]
+      nnext_el <- ordered_blocks[i + 1]
+      if (!is_digit(nnext_el)) nnext_el <- substr(nnext_el, 1, 1)
 
     } else if (i == length(ordered_blocks)) {
 
       # Last element does not have an upper constraint
-      nnext <- -99
+      nnext_el <- -99
 
       # Lower constraint is the last element of the previous ordered block
-      prev <- ordered_blocks[i - 1]
+      prev_el <- ordered_blocks[i - 1]
+      if (!is_digit(prev_el)) prev_el <- substr(prev_el, nchar(prev_el), nchar(prev_el))
 
     } else {
-
       # In between blocks have both lower and upper constraints
 
       # Lower constraint is the last element of the previous ordered block
-      prev <- ordered_blocks[i - 1]
+      prev_el <- ordered_blocks[i - 1]
+      if (!is_digit(prev_el)) prev_el <- substr(prev_el, nchar(prev_el), nchar(prev_el))
 
       # Upper constraint is the last element of the previous ordered block
-      nnext <- ordered_blocks[i + 1]
+      nnext_el <- ordered_blocks[i + 1]
+      if (!is_digit(nnext_el)) nnext_el <- substr(nnext_el, 1, 1)
     }
 
     # since our constraints are of the form '1>2'
-    constraint_mat[row, ] <- as.numeric(cbind(nnext, prev))
+    constraint_mat[row, ] <- as.numeric(cbind(nnext_el, prev_el))
     row <- row + 1
   }
 

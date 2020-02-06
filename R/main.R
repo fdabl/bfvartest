@@ -1,23 +1,32 @@
 #' Computes the one-sample log Bayes factor in favour of H1
 #'
 #' @param n sample size
-#' @param s2 observed sum of squares
+#' @param s sample standard deviation (1/n * \sqrt{\sum_i (x_i - \mu)^2})
 #' @param popsd population standard deviation we test against
 #' @param alpha prior parameter
-#' @return the one-sample log Bayes factor in favour of H1
+#' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
+#' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
+#' @return the one-sample log Bayes factor in favour of H1 with \delta = popsd / s
 #' @examples
-#' one_sample(100, 1, 1, 4.50)
-one_sample <- function(n, s2, popsd, alpha = 0.50, logarithm = TRUE) {
+#' one_sample(100, 1, 1, 0.50)
+#' one_sample(100, 1, 1, 0.50, alternative_interval = c(1, Inf)) # one-sided test
+#' one_sample(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1)) # interval Bayes factor
+#' one_sample(100, 1, 1, 0.50, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
+one_sample <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
+  .check_interval_input(alternative_interval, null_interval)
+
+  s2 <- s^2
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
-  value <- integrate(function(tau) {
-    term <- ((n - 1)/2 + alpha) * log(tau / tau0) - log(tau) -2*alpha * log(1 + tau/tau0) - 0.5*n*s2*(tau - tau0)
-    exp(term)
-  }, 0, Inf)$value / beta(alpha, alpha)
+  if (is.null(null_interval)) {
+    logml0 <- (n - 1)/2 * log(tau0) - 0.50 * tau0 * n * s2 # correct!
+  } else {
+    logml0 <- .compute_logml_restr_k1(n, s2, popsd, interval = null_interval, alpha = alpha)
+  }
 
-  val <- ifelse(logarithm, log(value), value)[[1]]
-  suppressWarnings(Rmpfr::asNumeric(val))
+  logml1 <- .compute_logml_restr_k1(n, s2, popsd, interval = alternative_interval, alpha = alpha)
+  ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
 }
 
 
@@ -35,37 +44,17 @@ one_sample <- function(n, s2, popsd, alpha = 0.50, logarithm = TRUE) {
 #' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf)) # one-sided test
 #' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1)) # one-sided test
 #' two_sample(100, 200, 1, 2, 4.5, null_interval = c(0.9, 1.1)) # interval Bayes factor
-#' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
+#' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
 two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
-
-  alt_condition <- (all(is.numeric(alternative_interval)) &&
-                    alternative_interval[2] > alternative_interval[1] &&
-                    all(alternative_interval >= 0))
-
-  if (!alt_condition) {
-    stop('Something is off with your specification of alternative_interval')
-  }
-
-  if (!is.null(null_interval)) {
-    is_positive <- function(x) x >= 0
-
-    null_condition <- (all(is.numeric(null_interval)) &&
-                       all(null_interval >= 0) &&
-                       null_interval[2] > null_interval[1] &&
-                       all(is_positive(null_interval)))
-
-    if (!null_condition) {
-      stop('Something is off with your specification of null_interval')
-    }
-  }
+  .check_interval_input(alternative_interval, null_interval)
 
   if (is.null(null_interval)) {
     logml0 <- ((2 - n1 - n2)/2) * log(n1*s1 + n2*s2)
   } else {
-    logml0 <- .compute_logml_restr(n1, n2, s1, s2, interval = null_interval, alpha = alpha)
+    logml0 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = null_interval, alpha = alpha)
   }
 
-  logml1 <- .compute_logml_restr(n1, n2, s1, s2, interval = alternative_interval, alpha = alpha)
+  logml1 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = alternative_interval, alpha = alpha)
   val <- ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
   suppressWarnings(Rmpfr::asNumeric(val))
 }
@@ -98,7 +87,10 @@ k_sample <- function(hyp, ns, ss, alpha = 0.50, logarithm = TRUE, compute_ml = T
   res <- list()
 
   for (h in hyp) {
-    res[[h]] <- .create_levene_object(h, ns, ss, alpha, priors_only = priors_only, compute_ml = ifelse(priors_only, !priors_only, compute_ml), ...)
+    res[[h]] <- .create_levene_object(
+      h, ns, ss, alpha, priors_only = priors_only,
+      compute_ml = ifelse(priors_only, !priors_only, compute_ml), ...
+    )
   }
 
   # Add Bayes factors

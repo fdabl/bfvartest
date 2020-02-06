@@ -9,13 +9,13 @@ test_that('One-sample Test Gives Expected Result', {
 })
 
 
-context('K = 2 Sample Test')
+context('Interval Specification')
 test_that('Function stops if wrong interval input', {
-  expect_error(two_sample(100, 100, 1, 1, 0.5, alternative_interval = NULL))
-  expect_error(two_sample(100, 100, 1, 1, 0.5, alternative_interval = c(-2, 4)))
+  expect_error(.check_interval_input(alternative_interval = NULL, null_interval = NULL))
+  expect_error(.check_interval_input(alternative_interval = c(-2, 4), null_interval = NULL))
 
-  expect_error(two_sample(100, 100, 1, 1, 0.5, null_interval = c(-2, 4)))
-  expect_error(two_sample(100, 100, 1, 1, 0.5, null_interval = c(.5, .2)))
+  expect_error(.check_interval_input(alternative_interval = c(0, Inf), null_interval = c(-2, 4)))
+  expect_error(.check_interval_input(alternative_interval = c(0, Inf), null_interval = c(.5, .2)))
 })
 
 
@@ -62,8 +62,7 @@ test_that('Stan order_parameters function works', {
 
   get_oparams <- function(hyp, k) {
     rho <- runif(k)
-    beta <- runif(k)
-    rho <- rho / sum(rho)
+    beta <- runif(k, 0, 1)
 
     standat <- .prepare_standat(hyp, rep(100, k), rep(1, k), .50)
     cmat <- lapply(1:nrow(standat$constraint_mat), function(i) standat$constraint_mat[i, ])
@@ -88,6 +87,21 @@ test_that('Stan order_parameters function works', {
     r[4] > r[5] && r[5] > r[6] && r[6] == r[7] && r[7] == r[8] && r[8] > r[9]
   )
 })
+
+# rho <- t(sapply(seq(1000), function(i) get_oparams('1>2', 2)))
+# rho <- t(replicate(1000, sim(.50)))
+
+
+# sim <- function(a = .50) {
+#   b <- runif(1)
+#   rho1 <- rbeta(1, a, a)
+#   rho2 <- 1 - rho1
+#
+#   rho <- c(b * (1 - rho2) + rho2)
+#   rho <- c(rho, (1 - b) * rho[1])
+#   rho / sum(rho)
+# }
+
 
 test_that('k_sample errors correctly', {
   ss <- c(1, 2, 3)
@@ -119,20 +133,24 @@ test_that('k_sample gives same result as (directed) two_sample for K = 2', {
   bfr1 <- bfr0 - bf10
 
   res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE, iter = 10000)
+  res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = TRUE)
   expect_true(abs(res$BF[2, 1] - bfr1) < .1)
 })
 
-#
 # fit1 <- res[[1]]$fit
 # rho <- extract(fit1, 'rho')$rho
 # rhou <- extract(fit1, 'rho_unconstrained')$rho_unconstrained
 #
 # fit2 <- res[[2]]$fit
-# rho2 <- extract(fit2, 'rho')$rho
+# rho2 <- extract(fit2, 'rho')$
 # rhou2 <- extract(fit2, 'rho_unconstrained')$rho_unconstrained
 #
-# standat1 <- .prepare_standat(hyp[1], ns, ss, a)
-# standat2 <- .prepare_standat(hyp[2], ns, ss, a)
+# fit3 <- res[[3]]$fit
+# rho3 <- extract(fit3, 'rho')$rho[, 2:1]
+#
+# standat1 <- .prepare_standat(hyp[1], ns, ss, .5)
+# standat2 <- .prepare_standat(hyp[2], ns, ss, .5)
+# get_oparams(hyp[2], 2)
 # stanres1 <- rstan::sampling(stanmodels$BayesLevene, data = standat1)
 # stanres2 <- rstan::sampling(stanmodels$BayesLevene, data = standat2)
 # res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE)

@@ -1,5 +1,58 @@
+# Checks whether the intervals for the null and the alternative are correctly specified
+.check_interval_input <- function(alternative_interval, null_interval) {
+  alt_condition <- (all(is.numeric(alternative_interval)) &&
+                      alternative_interval[2] > alternative_interval[1] &&
+                      all(alternative_interval >= 0))
+
+  if (!alt_condition) {
+    stop('Something is off with your specification of alternative_interval')
+  }
+
+  if (!is.null(null_interval)) {
+    is_positive <- function(x) x >= 0
+
+    null_condition <- (all(is.numeric(null_interval)) &&
+                         all(null_interval >= 0) &&
+                         null_interval[2] > null_interval[1] &&
+                         all(is_positive(null_interval)))
+
+    if (!null_condition) {
+      stop('Something is off with your specification of null_interval')
+    }
+  }
+}
+
+
+# Computes the log marginal likelihood for 1 = 2 hypothesis
+.compute_logml_restr_k1 <- function(n, s2, popsd, interval, alpha = 0.50) {
+  popvar <- popsd^2
+  tau0 <- 1 / popvar
+
+  scaled_lbetaprime <- function(tau, tau0, alpha) {
+    value <- (alpha - 1) * log(tau / tau0) - 2*alpha *
+             log(1 + tau / tau0) - log(tau0) - lbeta(alpha, alpha)
+    value
+  }
+
+  lo <- interval[1]
+  hi <- interval[2]
+  Z <- (integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value -
+        ifelse(lo == 0, 0, integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value))
+
+  value <- integrate(function(tau) {
+    llh <- (n - 1)/2 * log(tau) - 0.5 * tau * n * s2
+    lprior <- scaled_lbetaprime(tau, tau0, alpha)# - log(tau0)
+
+    exp(llh + lprior - log(Z))
+  }, lo, hi)$value
+
+  log(value)
+}
+
+
+
 # Computes the log marginal likelihood for K = 2 hypothesis
-.compute_logml_restr <- function(n1, n2, s1, s2, interval, alpha = 0.50) {
+.compute_logml_restr_k2 <- function(n1, n2, s1, s2, interval, alpha = 0.50) {
   n <- n1 + n2
   to_rho <- function(delta) ifelse(delta == Inf, 1, delta^2 / (1 + delta^2))
   lo <- to_rho(interval[1])
@@ -142,16 +195,8 @@
     nr_equal = nr_equal, nr_ordered = nr_ordered, nr_free = nr_free
   )
 
-  # hack so that it works with only two groups (for testing)
-  if (standat$nr_rel == 1) {
-    standat$nr_rel <- 2
-    if (standat$relations[1] == 3) {
-      standat$relations <- c(standat$relations, 3)
-    } else {
-      standat$relations <- c(standat$relations, -99)
-    }
-  }
-
+  # Otherwise Stan throws an error in the K = 2 case
+  dim(standat$relations) <- length(standat$relations)
   standat
 }
 

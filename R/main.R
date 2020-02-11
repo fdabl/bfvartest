@@ -71,19 +71,11 @@ two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0,
 #' @examples
 #' ss <- c(1, 2, 3)
 #' ns <- c(100, 100, 100)
-#' hyp <- c('1=2=3', '1,2,3', '1>2>3')
+#' hyp <- c('1=2=3', '1,2,3', '1<2<3')
 #' k_sample(hyp, ns, ss, 0.50)
 k_sample <- function(hyp, ns, ss, alpha = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
 
-  len <- c(length(hyp), length(ns), length(ss))
-
-  if (len[1] < 2) {
-    stop('Need at least two hypotheses to compare!')
-  }
-  if (len[2] != len[3]) {
-    stop('Need information about sample size and observed sum of squares for all groups!')
-  }
-
+  .check_user_input(hyp, ns, ss)
   res <- list()
 
   for (h in hyp) {

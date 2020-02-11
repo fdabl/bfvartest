@@ -36,19 +36,20 @@
 
   lo <- interval[1]
   hi <- interval[2]
-  Z <- (integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value -
-        ifelse(lo == 0, 0, integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value))
+  Z <- integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value -
+       ifelse(
+         lo == 0, 0, integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value
+       )
 
   value <- integrate(function(tau) {
     llh <- (n - 1)/2 * log(tau) - 0.5 * tau * n * s2
-    lprior <- scaled_lbetaprime(tau, tau0, alpha)# - log(tau0)
+    lprior <- scaled_lbetaprime(tau, tau0, alpha)
 
     exp(llh + lprior - log(Z))
   }, lo, hi)$value
 
   log(value)
 }
-
 
 
 # Computes the log marginal likelihood for K = 2 hypothesis
@@ -62,7 +63,9 @@
   # Rmpfr provides arbitrary precision floating point arithmetic
   value <- Rmpfr::integrateR(function(rho) {
     rho <- Rmpfr::mpfr(rho, 100)
-    llh <- ((n1 - 1)/2 + alpha - 1) * log(rho) + ((n2 - 1)/2 + alpha - 1) * log(1 - rho) + ((2 - n)/2) * log(rho*n1*s1 + (1 - rho)*n2*s2)
+    llh <- ((n1 - 1)/2 + alpha - 1) * log(rho) +
+           ((n2 - 1)/2 + alpha - 1) * log(1 - rho) +
+           ((2 - n)/2) * log(rho*n1*s1 + (1 - rho)*n2*s2)
 
     exp(llh - log(Z) - lbeta(alpha, alpha))
   }, lo, hi)$value
@@ -71,72 +74,111 @@
 }
 
 
-# Takes a hypothesis and creates a matrix encoding the order-constraints of the elements (used in Stan)
-.create_constraint_matrix <- function(hyp) {
-  check <- gsub('[0-9>=, ]', '.', hyp)
-  correct <- sapply(strsplit(check, '')[[1]], function(el) el == '.')
+# computes the prior probability with which \rho follows the hypothesis
+.compute_prior_restr <- function(hyp) {
+  s <- strsplit(hyp, '<')[[1]]
+  n <- length(s)
 
-  # Check whether input is correct
-  if (!all(correct)) { stop('Hypothesis can contain only [digits > = ,]') }
-  # if (length(correct) < 5) { stop('Hypothesis needs at least three group elements.')}
+  ss <- strsplit(hyp, '')[[1]]
+  ngroups <- as.numeric(ss[length(ss)])
+  num <- factorial(ngroups)
 
-  # Check if hypothesis is ordered from low to high
-  check <- gsub('[>=,]', '.', hyp)
-  num <- as.numeric(unlist(strsplit(check, '\\.')))
-
-  if (!all(num == seq(length(num)))) {
-    stop('Hypothesis needs to be given in ascending numeric order (e.g., 1>2>3 instead of 3>2>1)')
+  for (i in seq(n)) {
+    num <- num / factorial(length(strsplit(s[i], ',')[[1]]))
   }
 
-  # Split the hypothesis into ordered blocks, initialize constraints between these blocks
-  ordered_blocks <- strsplit(hyp, '>')[[1]]
-  constraint_mat <- matrix(NA, nrow = length(ordered_blocks), ncol = 2)
-  is_digit <- function(x) suppressWarnings(!is.na(as.numeric(x)))
+  1 / num
+}
 
-  row <- 1
-  for (i in seq(1, length(ordered_blocks))) {
 
-    if (i == 1) {
+# '1,2<3=4,5<6' -> '1,2<3,4<5'
+.reduce_hyp_equals <- function(string) {
+  n <- length(string)
+  res <- c()
+  j <- 1
+  for (i in seq(n)) {
+    si <- strsplit(string[i], ',')[[1]]
+    ni <- length(si)
 
-      # First element does not have a lower constraint
-      prev_el <- -99
-
-      # Upper constraint is the first element of the next ordered block
-      nnext_el <- ordered_blocks[i + 1]
-      if (!is_digit(nnext_el)) nnext_el <- substr(nnext_el, 1, 1)
-
-    } else if (i == length(ordered_blocks)) {
-
-      # Last element does not have an upper constraint
-      nnext_el <- -99
-
-      # Lower constraint is the last element of the previous ordered block
-      prev_el <- ordered_blocks[i - 1]
-      if (!is_digit(prev_el)) prev_el <- substr(prev_el, nchar(prev_el), nchar(prev_el))
-
-    } else {
-      # In between blocks have both lower and upper constraints
-
-      # Lower constraint is the last element of the previous ordered block
-      prev_el <- ordered_blocks[i - 1]
-      if (!is_digit(prev_el)) prev_el <- substr(prev_el, nchar(prev_el), nchar(prev_el))
-
-      # Upper constraint is the last element of the previous ordered block
-      nnext_el <- ordered_blocks[i + 1]
-      if (!is_digit(nnext_el)) nnext_el <- substr(nnext_el, 1, 1)
+    r <- j
+    j <- j + 1
+    if (ni > 1) {
+      for (k in seq(2, ni)) {
+        r <- paste0(r, ',', j)
+        j <- j + 1
+      }
     }
 
-    # since our constraints are of the form '1>2'
-    constraint_mat[row, ] <- as.numeric(cbind(nnext_el, prev_el))
-    row <- row + 1
+    res <- c(res, r)
   }
 
-  # If the ordered block is of length one, we do not have any order-constraints!
-  if (length(ordered_blocks) == 1) {
-    constraint_mat <- matrix(c(-99, -99), 1, 2)
+  res
+}
+
+
+# Parses user input such as '1,2<3=4,5<6'
+# We reduce the dimensionality so that it results in '1,2<3,4<5'
+.create_hyp_fn <- function(hyp) {
+  s <- strsplit(hyp, '<')[[1]]
+  sr <- .reduce_hyp_equals(s)
+  dig <- gsub('[^0-9.-]', ',', sr)
+  fn_string <- 'function(x) '
+
+  # add order-constraints
+  for (i in seq(2, length(dig))) {
+    left <- paste0('max(x[c(', dig[i-1], ')])')
+    right <- paste0('min(x[c(', dig[i], ')])')
+    fn_string <- paste0(fn_string, left, ' < ', right, ifelse(i == length(dig), '', ' && '))
   }
 
-  constraint_mat
+  fn_string
+}
+
+
+# Checks whether the user input to k_sample is valid
+.check_user_input <- function(hyp, ns, ss) {
+  len <- c(length(hyp), length(ns), length(ss))
+
+  if (len[1] < 2) {
+    stop('Need at least two hypotheses to compare!')
+  }
+
+  if (len[2] != len[3]) {
+    stop('Need information about sample size and observed sum of squares for all groups!')
+  }
+
+  for (i in seq(length(hyp))) {
+    check <- gsub('[0-9<=, ]', '.', hyp[i])
+
+    if (check != gsub('.', '.', hyp[i])) {
+      stop('Hypothesis ', i, ' is misspecified. Only relations of the form [<,=] are allowed!')
+    }
+  }
+}
+
+
+# Checks whether hypothesis only includes ordinal and no constraints (e.g., '1<2=3<4')
+.is_only_ordered_and_equal <- function(hyp) {
+  s <- strsplit(hyp, '<')[[1]]
+
+  check <- sapply(s, function(si) {
+    length(strsplit(si, ',')[[1]]) == 1
+  })
+
+  all(check)
+}
+
+
+# Checks whether hypothesis is unconstrained (e.g., '1,2,3,4')
+.is_unconstrained <- function(hyp) {
+  s <- strsplit(hyp, ',')[[1]]
+  all(nchar(s) < 2)
+}
+
+# Checks whether hypothesis is all equal (e.g., '1,2,3,4')
+.is_allequal <- function(hyp) {
+  s <- strsplit(hyp, '=')[[1]]
+  all(nchar(s) < 2)
 }
 
 
@@ -148,20 +190,15 @@
     stop('Need same amount of information for each group.')
   }
 
-  constraint_mat <- .create_constraint_matrix(hyp)
-
-  check <- gsub('[0-9>=, ]', '.', hyp)
+  check <- gsub('[0-9<=, ]', '.', hyp)
   rel <- strsplit(gsub('[0-9]', '', hyp), '')[[1]]
   rel[which(rel == '=')] <- 1
-  rel[which(rel == '>')] <- 2
+  rel[which(rel == '<')] <- 2
   rel[which(rel == ',')] <- 3
   rel <- as.numeric(rel)
 
   nr_equal <- sum(rel == 1)
-  nr_ordered <- sum(rel == 2)
-  nr_free <- sum(rel == 3)
-
-  strip_num <- strsplit(gsub('[>,=]', ' ', hyp), ' ')[[1]]
+  strip_num <- strsplit(gsub('[<,=]', ' ', hyp), ' ')[[1]]
   strip_punct <- strsplit(gsub('[0-9]', ' ', hyp), ' +')[[1]]
 
   strip <- c()
@@ -175,8 +212,7 @@
   index_vector <- numeric(k)
 
   for (i in seq(length(strip))) {
-
-    if (strip[i] %in% c('>', ',')) {
+    if (strip[i] %in% c('<', ',')) {
       count <- count + 1
     }
 
@@ -190,13 +226,12 @@
     k = k, s2 = ss,
     N = ns, alpha = a,
     index_vector = index_vector,
-    constraint_mat = constraint_mat,
-    relations = rel, nr_rel = length(rel), priors_only = priors_only,
-    nr_equal = nr_equal, nr_ordered = nr_ordered, nr_free = nr_free
+    priors_only = priors_only,
+    nr_equal = nr_equal
   )
 
   # Otherwise Stan throws an error in the K = 2 case
-  dim(standat$relations) <- length(standat$relations)
+  # dim(standat$relations) <- length(standat$relations)
   standat
 }
 
@@ -216,23 +251,36 @@
 #' @returns the log marginal likelihood (and samples if specified) of the hypothesis
 .create_levene_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, ...) {
 
+  standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
 
-  if (hyp == 'ord') {
-    standat <- .prepare_standat('1>2', ns, rev(ss), a, priors_only = priors_only)
-    stanres <- rstan::sampling(stanmodels$BayesLeveneOrdered, data = standat, ...)
+  if (.is_unconstrained(hyp) || .is_allequal(hyp)) {
+    fit <- rstan::sampling(stanmodels$BayesLeveneMixed, data = standat, ...)
+
+    if (compute_ml) {
+      logml <- bridgesampling::bridge_sampler(fit)$logml
+    }
+
+  } else if (.is_only_ordinal_and_equal(hyp)) {
+    fit <- rstan::sampling(stanmodels$BayesLeveneOrdered, data = standat, ...)
+
+    if (compute_ml) {
+      logml <- bridgesampling::bridge_sampler(fit)$logml
+    }
   } else {
-    standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
-    stanres <- rstan::sampling(stanmodels$BayesLevene, data = standat, ...)
+    fit <- rstan::sampling(stanmodels$BayesLeveneMixed, data = standat, ...)
+
+    if (compute_ml) {
+      rho <- rstan::extract(fit, 'rho')$rho
+      hyp_fn <- eval(parse(text = .create_hyp_fn(hyp)))
+
+      # Kluglist & Hoijtink (2005) trick
+      BF_mixedequal_fullequal <- log(mean(apply(rho, 1, hyp_fn))) - log(.compute_prior_restr(hyp))
+      logml_fullequal <- bridgesampling::bridge_sampler(fit)$logml
+      logml <- BF_mixedequal_fullequal + logml_fullequal # this is logml_mixedequal
+    }
   }
 
-  if (!compute_ml) {
-    return(list(
-      'fit' = stanres
-    ))
-  }
-
-  logml <- bridgesampling::bridge_sampler(stanres)$logml
-  res <- list('fit' = stanres, 'logml' = logml)
+  res <- list('fit' = fit, 'logml' = logml)
   class(res) <- 'Levene'
   res
 }

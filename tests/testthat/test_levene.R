@@ -31,89 +31,66 @@ test_that('Two-sample Test Gives Expected Result', {
 })
 
 
+
 context('K > 2 Sample Helper Functions')
-test_that('Constrained matrix errors expectedly', {
-  expect_error(.create_constraint_matrix('2>1')) # needs to be ascending
-  expect_error(.create_constraint_matrix('1<2')) # < not allowed
-  expect_error(.create_constraint_matrix('1u2,3>4')) # u not allowed
+test_that('Parses the input correctly into a function', {
+  hyp <- '1<2'
+  hyp_fn <- .create_hyp_fn(hyp)
+  hyp_want <- 'function(x) max(x[c(1)]) < min(x[c(2)])'
+  expect_true(identical(hyp_fn, hyp_want))
+
+  hyp <- '1<2,3'
+  hyp_fn <- .create_hyp_fn(hyp)
+  hyp_want <- 'function(x) max(x[c(1)]) < min(x[c(2,3)])'
+  expect_true(identical(hyp_fn, hyp_want))
+
+  hyp <- '1<2,3=4'
+  hyp_fn <- .create_hyp_fn(hyp)
+  hyp_want <- 'function(x) max(x[c(1)]) < min(x[c(2,3)])'
+  expect_true(identical(hyp_fn, hyp_want))
+
+  hyp <- '1,2<3,4=5<6,7=8<9'
+  hyp_fn <- .create_hyp_fn(hyp)
+  hyp_want <- 'function(x) max(x[c(1,2)]) < min(x[c(3,4)]) && max(x[c(3,4)]) < min(x[c(5,6)]) && max(x[c(5,6)]) < min(x[c(7)])'
+  expect_true(identical(hyp_fn, hyp_want))
 })
 
-test_that('Constrained matrix handles mixed hypotheses', {
-  hyp <- '1,2>3=4>5>6=7=8>9'
-  cmat <- .create_constraint_matrix(hyp)
-  emat <- cbind(
-    c(3, 5, 6, 9, -99), # lower constraints
-    c(-99, 2, 4, 5, 8) # upper constraints
-  )
-  expect_true(all(cmat == emat))
-})
 
-test_that('Group sizes K > 9 constraints work', {
-  hyp <- c('1>2>3>4>5>6>7>8>9>10>11>12')
-  lower <- c(seq(2, 12), -99)
-  upper <- c(-99, seq(11))
-  expect_true(all(.create_constraint_matrix(hyp) == cbind(lower, upper)))
+test_that('Only Ordered and equal check works', {
+  expect_true(.is_only_ordered_and_equal('1<2<3'))
+  expect_true(.is_only_ordered_and_equal('1<2=3'))
+  expect_false(.is_only_ordered_and_equal('1<2,3'))
+  expect_false(.is_only_ordered_and_equal('1<2=3,4<5'))
 })
 
 
-context('K > 2 Sample Test')
-test_that('Stan order_parameters function works', {
-  rstan::expose_stan_functions(stanmodels$BayesLevene)
+test_that('Prior probability of restriction is correct', {
+  hyp <- c('1<2,3,4<5,6<7')
+  ns <- rep(100, 7)
+  ss <- c(1, 2, 2, 5, 6, 6, 7)
+  standat <- .prepare_standat(hyp, ns, ss, 0.50, priors_only = TRUE)
+  fit <- rstan::sampling(stanmodels$BayesLeveneMixed, data = standat, iter = 100000, cores = 6, chains = 6)
+  rho <- extract(fit, 'rho')$rho
 
-  get_oparams <- function(hyp, k) {
-    rho <- runif(k)
-    beta <- runif(k, 0, 1)
-
-    standat <- .prepare_standat(hyp, rep(100, k), rep(1, k), .50)
-    cmat <- lapply(1:nrow(standat$constraint_mat), function(i) standat$constraint_mat[i, ])
-    order_parameters(
-      rho, beta, length(rho), nr_rel = standat$nr_rel,
-      relations = standat$relations, constraint_mat = cmat
-    )
-  }
-
-  r <- get_oparams('1>2>3>4', 4)
-  expect_true(r[1] > r[2] && r[2] > r[3] && r[3] > r[4])
-
-  r <- get_oparams('1=2=3=4', 4)
-  expect_true(all(r == 1/4))
-
-  r <- get_oparams('1,2,3,4', 4)
-  expect_true(all(diff(r) != 0) && sum(r) == 1)
-
-  r <- get_oparams('1,2>3=4>5>6=7=8>9', 9)
-  expect_true(
-    r[1] != r[2] && r[1] > r[3] && r[2] > r[3] && r[3] == r[4] &&
-    r[4] > r[5] && r[5] > r[6] && r[6] == r[7] && r[7] == r[8] && r[8] > r[9]
-  )
+  hyp_fn <- eval(parse(text = .create_hyp_fn(hyp)))
+  expect_true(abs(mean(apply(rho, 1, hyp_fn)) - .compute_prior_restr(hyp)) < 0.001)
 })
 
-# rho <- t(sapply(seq(1000), function(i) get_oparams('1>2', 2)))
-# rho <- t(replicate(1000, sim(.50)))
 
-
-# sim <- function(a = .50) {
-#   b <- runif(1)
-#   rho1 <- rbeta(1, a, a)
-#   rho2 <- 1 - rho1
-#
-#   rho <- c(b * (1 - rho2) + rho2)
-#   rho <- c(rho, (1 - b) * rho[1])
-#   rho / sum(rho)
-# }
-
-
-test_that('k_sample errors correctly', {
+test_that('User input check is valid', {
   ss <- c(1, 2, 3)
   ns <- c(100, 100, 100)
 
-  expect_error(k_sample('1>2>3', ns, ss, alpha = 0.50))
-  expect_error(k_sample(c('1>2>3', '1=2=3'), ns[-1], ss, alpha = 0.50))
+  expect_error(.check_user_input('1<2<3', ns, ss))
+  expect_error(.check_user_input(c('1<2<3', '1=2=3'), ns[-1], ss))
+  expect_error(.check_user_input(c('1>2>3', '1=2=3'), ns, ss))
 })
 
 
+
+context('K > 2 Sample Test')
 test_that('k_sample gives same result as (undirected) two_sample for K = 2', {
-  ss <- c(1, 2)
+  ss <- c(1, 1)
   ns <- c(100, 100)
   hyp <- c('1,2', '1=2')
 
@@ -126,47 +103,42 @@ test_that('k_sample gives same result as (undirected) two_sample for K = 2', {
 test_that('k_sample gives same result as (directed) two_sample for K = 2', {
   ss <- c(1, 2)
   ns <- c(100, 100)
-  hyp <- c('1,2', '1>2', 'ord')
+  hyp <- c('1,2', '1<2')
 
   bf10 <- two_sample(ns[1], ns[2], ss[1], ss[2])
   bfr0 <- two_sample(ns[1], ns[2], ss[1], ss[2], alternative_interval = c(1, Inf))
   bfr1 <- bfr0 - bf10
 
-  res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE, iter = 10000)
-  res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = TRUE)
+  res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE)
   expect_true(abs(res$BF[2, 1] - bfr1) < .1)
 })
 
-# fit1 <- res[[1]]$fit
-# rho <- extract(fit1, 'rho')$rho
-# rhou <- extract(fit1, 'rho_unconstrained')$rho_unconstrained
-#
-# fit2 <- res[[2]]$fit
-# rho2 <- extract(fit2, 'rho')$
-# rhou2 <- extract(fit2, 'rho_unconstrained')$rho_unconstrained
-#
-# fit3 <- res[[3]]$fit
-# rho3 <- extract(fit3, 'rho')$rho[, 2:1]
-#
-# standat1 <- .prepare_standat(hyp[1], ns, ss, .5)
-# standat2 <- .prepare_standat(hyp[2], ns, ss, .5)
-# get_oparams(hyp[2], 2)
-# stanres1 <- rstan::sampling(stanmodels$BayesLevene, data = standat1)
-# stanres2 <- rstan::sampling(stanmodels$BayesLevene, data = standat2)
-# res <- k_sample(hyp, ns, ss, alpha = 0.50, priors_only = FALSE)
 
 test_that('All cases work for K = 3', {
   ss <- c(1, 2, 3)
   ns <- c(100, 100, 100)
-  hyp <- c('1>2>3', '1=2=3')
+  hyp <- c('1<2<3', '1=2=3')
 
   k_sample(hyp, ns, ss, alpha = 0.50)
 })
 
 
 test_that('k_sample works for K > 9 groups', {
-  hyp <- c('1>2>3>4>5>6>7>8>9>10>11>12', '1,2,3,4,5,6,7,8,9,10,11,12')
+  hyp <- c('1<2<3<4<5<6<7<8<9<10<11<12', '1,2,3,4,5,6,7,8,9,10,11,12')
   ss <- seq(12)
   ns <- rep(100, 12)
   res <- k_sample(hyp, ns, ss)
 })
+
+
+
+# logml <- bridgesampling::bridge_sampler(fit)$logml
+#
+# ldir <- sum(lgamma(rep(a, k))) - lgamma(a*k)
+# ldir2 <- sum(lgamma(rep(a, k-1))) - lgamma(a*(k-1))
+# l <- log(mean(apply(post, 1, function(rho) rho[1] > rho[2] & rho[2] > rho[4])) / (1/6)) + logml
+#
+# log_marginal_likelihood(ss, ns, hypothesis = c('1<2=3<4,5'))
+# log_marginal_likelihood(ss, ns, hypothesis = c('1,2=3,4,5'))
+# lml <- log_marginal_likelihoods(ss, ns, hypotheses = c('1,2=3,4,5', '1<2=3<4,5', '1,2,3,4,5'))
+# bayes_factors(lml, log.BF = TRUE)

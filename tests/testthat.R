@@ -1,4 +1,4 @@
 library(testthat)
-library(BayesLevene)
+library(bfvartest)
 
-test_check("BayesLevene")
+test_check("bfvartest")

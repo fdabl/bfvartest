@@ -1,21 +1,22 @@
 #' Computes the one-sample log Bayes factor in favour of H1
 #'
 #' @param n sample size
-#' @param s sample standard deviation (1/n * \sqrt{\sum_i (x_i - \mu)^2})
+#' @param s sample standard deviation
 #' @param popsd population standard deviation we test against
 #' @param alpha prior parameter
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
-#' @return the one-sample log Bayes factor in favour of H1 with \delta = popsd / s
+#' @return The one-sample log Bayes factor in favour of H1 with delta = popsd / s
 #' @examples
-#' one_sample(100, 1, 1, 0.50)
-#' one_sample(100, 1, 1, 0.50, alternative_interval = c(1, Inf)) # one-sided test
-#' one_sample(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1)) # interval Bayes factor
-#' one_sample(100, 1, 1, 0.50, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
-one_sample <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
+#' onesd_test(100, 1, 1, 0.50)
+#' onesd_test(100, 1, 1, 0.50, alternative_interval = c(1, Inf)) # one-sided test
+#' onesd_test(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1)) # interval Bayes factor
+#' onesd_test(100, 1, 1, 0.50, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
+onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
   .check_interval_input(alternative_interval, null_interval)
 
-  s2 <- s^2
+  # convert to sample sum of squares
+  s2 <- (s * ((n - 1) / n))^2
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
@@ -34,19 +35,23 @@ one_sample <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
 #'
 #' @param n1 sample size of group 1
 #' @param n2 sample size of group 2
-#' @param s1 observed sum of squares of group 1
-#' @param s2 observed sum of squares of group 2
+#' @param sd1 sample standard deviation of group 1
+#' @param sd2 sample standard deviation of group 2
 #' @param alpha prior parameter
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
-#' @return the two-sample log Bayes factor in favour of H1
+#' @return The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
 #' @examples
-#' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf)) # one-sided test
-#' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1)) # one-sided test
-#' two_sample(100, 200, 1, 2, 4.5, null_interval = c(0.9, 1.1)) # interval Bayes factor
-#' two_sample(100, 200, 1, 2, 4.5, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
-two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
+#' twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf)) # one-sided test
+#' twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1)) # one-sided test
+#' twosd_test(100, 200, 1, 2, 4.5, null_interval = c(0.9, 1.1)) # interval Bayes factor
+#' twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
+twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
   .check_interval_input(alternative_interval, null_interval)
+
+  # convert to sample sum of squares
+  s1 <- (sd1 * ((n1 - 1) / n1))^2
+  s2 <- (sd2 * ((n2 - 1) / n2))^2
 
   if (is.null(null_interval)) {
     logml0 <- ((2 - n1 - n2)/2) * log(n1*s1 + n2*s2)
@@ -64,22 +69,28 @@ two_sample <- function(n1, n2, s1, s2, alpha = 0.50, alternative_interval = c(0,
 #'
 #' @param hyp vector of hypotheses
 #' @param ns vector of sample sizes
-#' @params ss a vector containing sample sum of squares
+#' @params sds a vector containing the sample standard deviations
 #' @param alpha prior parameter
 #' @param ... arguments to rstan::sampling
-#' @return the log Bayes factors of all hypotheses against each other
+#' @return A list of 'bfvar' objects, which include stanfit objects, log marginal likelihoods, and pairwise Bayes factors
 #' @examples
 #' ss <- c(1, 2, 3)
 #' ns <- c(100, 100, 100)
 #' hyp <- c('1=2=3', '1,2,3', '1<2<3')
-#' k_sample(hyp, ns, ss, 0.50)
-k_sample <- function(hyp, ns, ss, alpha = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
+#' ksd_test(hyp, ns, ss, 0.50)
+ksd_test <- function(hyp, ns, sds, alpha = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
 
-  .check_user_input(hyp, ns, ss)
+  .check_user_input(hyp, ns, sds)
+
+  # convert to sample sum of squares
+  ss <- (sds * ((ns - 1) / ns))^2
+
+  # translate hypothesis on variance / standard deviation into hypothesis on precision
+  hyp <- gsub('>', '<', hyp)
   res <- list()
 
   for (h in hyp) {
-    res[[h]] <- .create_levene_object(
+    res[[h]] <- .create_bfvar_object(
       h, ns, ss, alpha, priors_only = priors_only,
       compute_ml = ifelse(priors_only, !priors_only, compute_ml), ...
     )

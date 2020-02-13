@@ -1,8 +1,8 @@
-Package: BayesLevene
+Package: bfvartest
 Title: Bayes factors for testing (in)equality constrained hypotheses on variances
 Version: 0.1.0
 Authors@R: person(given = "Fabian", family = "Dablander", role = c("aut", "cre"), email = "dablander.fabian@gmail.com")
-Description: Computes Bayes factors for testing (in)equality constrained hypotheses on variances
+Description: Computes Bayes factors for testing (in)equality constrained hypotheses on standard deviations (or variances) for independent outcomes / between-subjects
 License: GPL (>=3)
 Depends:
     methods,

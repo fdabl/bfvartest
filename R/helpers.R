@@ -148,10 +148,10 @@
   }
 
   for (i in seq(length(hyp))) {
-    check <- gsub('[0-9<=, ]', '.', hyp[i])
+    check <- gsub('[0-9>=, ]', '.', hyp[i])
 
     if (check != gsub('.', '.', hyp[i])) {
-      stop('Hypothesis ', i, ' is misspecified. Only relations of the form [<,=] are allowed!')
+      stop('Hypothesis ', i, ' is misspecified. Only relations of the form [>,=] are allowed!')
     }
   }
 }
@@ -159,7 +159,7 @@
 
 # Checks whether hypothesis only includes ordinal and no constraints (e.g., '1<2=3<4')
 .is_only_ordered_and_equal <- function(hyp) {
-  s <- strsplit(hyp, '<')[[1]]
+  s <- strsplit(hyp, '>')[[1]]
 
   check <- sapply(s, function(si) {
     length(strsplit(si, ',')[[1]]) == 1
@@ -169,13 +169,7 @@
 }
 
 
-# Checks whether hypothesis is unconstrained (e.g., '1,2,3,4')
-.is_unconstrained <- function(hyp) {
-  s <- strsplit(hyp, ',')[[1]]
-  all(nchar(s) < 2)
-}
-
-# Checks whether hypothesis is all equal (e.g., '1,2,3,4')
+# Checks whether hypothesis is all equal (e.g., '1=2=3=4')
 .is_allequal <- function(hyp) {
   s <- strsplit(hyp, '=')[[1]]
   all(nchar(s) < 2)
@@ -198,6 +192,7 @@
   rel <- as.numeric(rel)
 
   nr_equal <- sum(rel == 1)
+  nr_ordered <- sum(rel == 2)
   strip_num <- strsplit(gsub('[<,=]', ' ', hyp), ' ')[[1]]
   strip_punct <- strsplit(gsub('[0-9]', ' ', hyp), ' +')[[1]]
 
@@ -227,7 +222,7 @@
     N = ns, alpha = a,
     index_vector = index_vector,
     priors_only = priors_only,
-    nr_equal = nr_equal
+    nr_equal = nr_equal, nr_ordered = nr_ordered + 1
   )
 
   # Otherwise Stan throws an error in the K = 2 case
@@ -235,6 +230,16 @@
   standat
 }
 
+
+# extend print function to only show parameters tau and rho
+print.bfvar <- function(x) {
+  pars <- c('tau', 'rho')
+  print(x$fit, pars = pars)
+
+  if (!is.null(x$logml)) {
+    cat(paste0('\nLog Marginal Likelihood = ', round(x$logml, 3), '\n'))
+  }
+}
 
 
 #' Estimates the model using Stan and computes the marginal likelihood
@@ -248,28 +253,31 @@
 #' @params precision a logical specifying whether parameterization in terms of precision or variance is used
 #' @params ... arguments to rstan::sampling
 #'
-#' @returns the log marginal likelihood (and samples if specified) of the hypothesis
-.create_levene_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, ...) {
+#' @returns an object of class 'bfvar', which is a stanfit object with a log marginal likelihood (if specified)
+.create_bfvar_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, ...) {
 
+  # translate hypothesis on variance / standard deviation into hypothesis on precision
+  hyp <- gsub('>', '<', hyp)
+  logml <- NULL
   standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
 
-  if (.is_unconstrained(hyp) || .is_allequal(hyp)) {
-    fit <- rstan::sampling(stanmodels$BayesLeveneMixed, data = standat, ...)
+  if (!.is_only_ordered_and_equal(hyp) || .is_allequal(hyp)) {
+    fit <- rstan::sampling(stanmodels$Mixed, data = standat, ...)
 
-    if (compute_ml) {
+    if (compute_ml && !priors_only) {
       logml <- bridgesampling::bridge_sampler(fit)$logml
     }
 
-  } else if (.is_only_ordinal_and_equal(hyp)) {
-    fit <- rstan::sampling(stanmodels$BayesLeveneOrdered, data = standat, ...)
+  } else if (.is_only_ordered_and_equal(hyp)) {
+    fit <- rstan::sampling(stanmodels$Ordered, data = standat, ...)
 
-    if (compute_ml) {
+    if (compute_ml && !priors_only) {
       logml <- bridgesampling::bridge_sampler(fit)$logml
     }
   } else {
-    fit <- rstan::sampling(stanmodels$BayesLeveneMixed, data = standat, ...)
+    fit <- rstan::sampling(stanmodels$Mixed, data = standat, ...)
 
-    if (compute_ml) {
+    if (compute_ml && !priors_only) {
       rho <- rstan::extract(fit, 'rho')$rho
       hyp_fn <- eval(parse(text = .create_hyp_fn(hyp)))
 
@@ -281,6 +289,6 @@
   }
 
   res <- list('fit' = fit, 'logml' = logml)
-  class(res) <- 'Levene'
+  class(res) <- 'bfvar'
   res
 }

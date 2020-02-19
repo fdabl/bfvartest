@@ -360,7 +360,7 @@ public:
             if (as_bool(logical_negation(logical_eq(priors_only,1)))) {
 
                 current_statement_begin__ = 45;
-                lp_accum__.add((((((((k - sum(N)) / 2) * stan::math::log((2 * stan::math::pi()))) + dot_product(rep_vector(-(0.5),k),stan::math::log(N))) + (nplus * stan::math::log((tau * k)))) + dot_product(n,stan::math::log(rho))) - ((k * tau) * dot_product(divide(b,2),rho))));
+                lp_accum__.add((((((((k - sum(N)) / 2.0) * stan::math::log((2 * stan::math::pi()))) + dot_product(rep_vector(-(0.5),k),stan::math::log(N))) + (nplus * stan::math::log((tau * k)))) + dot_product(n,stan::math::log(rho))) - ((k * tau) * dot_product(divide(b,2.0),rho))));
             }
 
         } catch (const std::exception& e) {

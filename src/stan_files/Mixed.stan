@@ -41,9 +41,9 @@ model{
 
   if (!(priors_only == 1)) {
       target += (
-        ((k - sum(N))/2) * log(2*pi()) +
+        ((k - sum(N))/2.0) * log(2*pi()) +
         dot_product(rep_vector(-0.50, k), log(N)) +
-        nplus * log(tau*k) + dot_product(n, log(rho)) - k*tau*dot_product(b/2, rho)
+        nplus * log(tau*k) + dot_product(n, log(rho)) - k*tau*dot_product(b/2.0, rho)
       );
   }
 }

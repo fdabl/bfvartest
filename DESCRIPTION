@@ -2,7 +2,8 @@ Package: bfvartest
 Title: Bayes factors for testing (in)equality constrained hypotheses on variances
 Version: 0.1.0
 Authors@R: person(given = "Fabian", family = "Dablander", role = c("aut", "cre"), email = "dablander.fabian@gmail.com")
-Description: Computes Bayes factors for testing (in)equality constrained hypotheses on standard deviations (or variances) for independent outcomes / between-subjects
+Description: Computes Bayes factors for testing (in)equality constrained hypotheses on standard deviations (or variances)
+             for independent outcomes / between-subjects designs
 License: GPL (>=3)
 Depends:
     methods,
@@ -10,7 +11,9 @@ Depends:
     Rcpp (>= 1.0.0)
 Imports:
     rstan (>= 2.18.2),
-    rstantools (>= 1.5.1)
+    rstantools (>= 1.5.1),
+    bridgesampling,
+    Rmpfr
 LinkingTo:
     BH (>= 1.69.0-1),
     Rcpp (>= 1.0.0),

@@ -1,9 +1,10 @@
 #' Computes the one-sample log Bayes factor in favour of H1
 #'
+#' @export
 #' @param n sample size
 #' @param s sample standard deviation
 #' @param popsd population standard deviation we test against
-#' @param alpha prior parameter
+#' @param alpha parameter of the prior
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
 #' @return The one-sample log Bayes factor in favour of H1 with delta = popsd / s
@@ -15,13 +16,13 @@
 onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
   .check_interval_input(alternative_interval, null_interval)
 
-  # convert to sample sum of squares
+  # Convert to sample sum of squares
   s2 <- (s * ((n - 1) / n))^2
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
   if (is.null(null_interval)) {
-    logml0 <- (n - 1)/2 * log(tau0) - 0.50 * tau0 * n * s2 # correct!
+    logml0 <- (n - 1)/2 * log(tau0) - 0.50 * tau0 * n * s2
   } else {
     logml0 <- .compute_logml_restr_k1(n, s2, popsd, interval = null_interval, alpha = alpha)
   }
@@ -33,11 +34,12 @@ onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
 
 #' Computes the two-sample log Bayes factor in favour of H1
 #'
+#' @export
 #' @param n1 sample size of group 1
 #' @param n2 sample size of group 2
 #' @param sd1 sample standard deviation of group 1
 #' @param sd2 sample standard deviation of group 2
-#' @param alpha prior parameter
+#' @param alpha parameter of the prior
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
 #' @return The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
@@ -67,10 +69,11 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
 
 #' Computes the k-sample log Bayes factor for all hypotheses
 #'
+#' @export
 #' @param hyp vector of hypotheses
 #' @param ns vector of sample sizes
 #' @params sds a vector containing the sample standard deviations
-#' @param alpha prior parameter
+#' @param alpha parameter of the prior
 #' @param ... arguments to rstan::sampling
 #' @return A list of 'bfvar' objects, which include stanfit objects, log marginal likelihoods, and pairwise Bayes factors
 #' @examples
@@ -99,8 +102,7 @@ ksd_test <- function(hyp, ns, sds, alpha = 0.50, logarithm = TRUE, compute_ml = 
   # Add Bayes factors
   if (!priors_only && compute_ml) {
     nr_hyp <- length(hyp)
-    BF_matrix <- diag(0, nr_hyp)
-    colnames(BF_matrix) = rownames(BF_matrix) = hyp
+    BF_matrix <- matrix(0, nrow = nr_hyp, ncol = nr_hyp, dimnames = list(hyp, hyp))
 
     for (i in seq(nr_hyp)) {
       for (j in seq(nr_hyp)) {

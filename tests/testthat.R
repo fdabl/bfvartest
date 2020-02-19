@@ -1,4 +1,4 @@
-library(testthat)
-library(bfvartest)
+library('testthat')
+library('bfvartest')
 
-test_check("bfvartest")
+test_check('bfvartest')

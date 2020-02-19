@@ -1,6 +1,6 @@
 #' The 'bfvartest' package.
 #'
-#' @description Computes Bayes factors for testing (in)equality constrained hypotheses on variances
+#' @description Computes Bayes factors for testing (in)equality constrained hypotheses on variances / standard deviations
 #'
 #' @docType package
 #' @name bfvartest-package

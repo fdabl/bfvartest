@@ -12,7 +12,15 @@ ksd_test(hyp, ns, sds, alpha = 0.5, logarithm = TRUE,
 
 \item{ns}{vector of sample sizes}
 
-\item{alpha}{prior parameter}
+\item{sds}{a vector containing the sample standard deviations}
+
+\item{alpha}{parameter of the prior}
+
+\item{logarithm}{a logical specifying whether the log should be taken}
+
+\item{compute_ml}{a logical specifying whether the marginal likelihood should be computed}
+
+\item{priors_only}{a logical specifying whether we should only sample from the prior}
 
 \item{...}{arguments to rstan::sampling}
 }
@@ -23,8 +31,8 @@ A list of 'bfvar' objects, which include stanfit objects, log marginal likelihoo
 Computes the k-sample log Bayes factor for all hypotheses
 }
 \examples{
-ss <- c(1, 2, 3)
+ss <- c(3, 2, 1)
 ns <- c(100, 100, 100)
-hyp <- c('1=2=3', '1,2,3', '1<2<3')
+hyp <- c('1=2=3', '1,2,3', '1>2>3', '1>2=3', '1>2,3')
 ksd_test(hyp, ns, ss, 0.50)
 }

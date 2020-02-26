@@ -7,6 +7,23 @@
 .create_bfvar_object(hyp, ns, ss, a, compute_ml = TRUE,
   priors_only = FALSE, ...)
 }
+\arguments{
+\item{ns}{a vector containing sample sizes}
+
+\item{ss}{a vector containing sample sum of squares}
+
+\item{a}{a vector specifying the value of the parameters of the Dirichlet prior}
+
+\item{compute_ml}{a logical specifying whether the marginal likelihood should be computed}
+
+\item{priors_only}{a logical specifying whether we should only sample from the prior}
+
+\item{...}{arguments to rstan::sampling}
+
+\item{hypothesis}{a string specifying the hypothesis}
+
+\item{precision}{a logical specifying whether parameterization in terms of precision or variance is used}
+}
 \description{
 Estimates the model using Stan and computes the marginal likelihood
 }

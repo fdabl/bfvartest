@@ -27,9 +27,12 @@ parameters {
 }
 
 transformed parameters {
+  vector[k] sds;
   simplex[k] rho;
+
   for (i in 1:k) rho[i] = rho_unconstrained[index_vector[i]];
   rho = rho / sum(rho);
+  sds = 1.0 ./ sqrt(rho * tau * k);
 }
 
 model{
@@ -41,7 +44,7 @@ model{
 
   if (!(priors_only == 1)) {
       target += (
-        ((k - sum(N))/2.0) * log(2*pi()) +
+        ((k - sum(N))/2.0) * log(2.0*pi()) +
         dot_product(rep_vector(-0.50, k), log(N)) +
         nplus * log(tau*k) + dot_product(n, log(rho)) - k*tau*dot_product(b/2.0, rho)
       );

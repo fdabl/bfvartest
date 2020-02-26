@@ -16,11 +16,13 @@ twosd_test(n1, n2, sd1, sd2, alpha = 0.5, alternative_interval = c(0,
 
 \item{sd2}{sample standard deviation of group 2}
 
-\item{alpha}{prior parameter}
+\item{alpha}{parameter of the prior}
 
 \item{alternative_interval}{interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)}
 
 \item{null_interval}{interval for the null hypothesis (e.g., c(0.9, 1.1))}
+
+\item{logarithm}{a logical specifying whether the log should be taken}
 }
 \value{
 The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
@@ -29,8 +31,16 @@ The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
 Computes the two-sample log Bayes factor in favour of H1
 }
 \examples{
-twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf)) # one-sided test
-twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1)) # one-sided test
-twosd_test(100, 200, 1, 2, 4.5, null_interval = c(0.9, 1.1)) # interval Bayes factor
-twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
+
+# Interval null Bayes factor
+twosd_test(100, 200, 1, 2, 4.5, null_interval = c(0.9, 1.1))
+
+# One-sided tests
+twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf))
+twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1))
+
+# One-sided interval Bayes factor
+twosd_test(100, 200, 1, 2, 4.5,
+           alternative_interval = c(1.1, Inf),
+           null_interval = c(0.9, 1.1))
 }

@@ -1,0 +1,117 @@
+---
+title: "Overview of bfvartest"
+author: "Fabian Dablander"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this vignette, we discuss the functionality of the R package *bfvartest*, which computes Bayes factors for testing the (in)equality of independent population variances. In the following, we go over the $K = 1$, $K = 2$, and $K > 2$ sample tests, respectively, using the examples provided in Dablander, van den Bergh, Ly, and Wagenmakers (2020). Note that because it is easier to reason about standard deviations than variances, the functions expect standard deviations as inputs.
+
+## K = 1 Sample Test
+Suppos we observe the following data:
+
+```{r}
+# 2.6.1 Testing Against a Single Value
+x <- c(6.2, 5.8, 5.7, 6.3, 5.9, 5.8, 6.0)
+```
+
+We know that the population standard deviation is $\sigma_0 = 0.316$, and we are interested in testing whether the standard deviation of the population from which our sample was drawn, $\sigma$, differs from this value. We define an effect size $\delta = \frac{\sigma_0}{\sigma}$, and test the following hypotheses:
+
+$$
+\begin{aligned}
+\mathcal{H}_0 &: \delta = 1\\[0.50em]
+\mathcal{H}_1 &: \delta \sim \text{BetaPrime}(\alpha) \enspace ,
+\end{aligned}
+$$
+
+where $\alpha$ is a parameter that influences the width of the prior. Using the code below, we find that thee Bayes factor in favour of $\mathcal{H}_1$ is about 1, which indicates equivocal evidence.
+
+```{r}
+library('bfvartest')
+
+onesd_test(
+    n = length(x), s = sd(x), popsd = 0.316,
+    alpha = 2.16, alternative_interval = c(0, Inf), logarithm = FALSE
+)
+```
+
+Note that $\delta \in \mathrm{R}^{+}$, and that we have specified the alternative intervall to be all of $\mathrm{R}^+ whole range. This means that we have done an undirected test. However, we could also test whether $\sigma > \sigma_0$, that is, whether $\delta < 1$, which is specified by the following alternative hypothesis:
+
+$$
+\mathcal{H}_+ : \delta \sim \text{BetaPrime}(\alpha), \delta \in [0, 1] \enspace .
+$$
+
+To conduct this test, we write:
+
+```{r}
+onesd_test(
+    n = length(x), s = sd(x), popsd = 0.316,
+    alpha = 2.16, alternative_interval = c(0, 1), logarithm = FALSE
+)
+```
+
+This yields $\text{BF}_{+0} = 0.0013$, or conversely, $\text{BF}_{0+} = 795$, which indicates strong evidence against the hypothesis that $\sigma > \sigma_0$ in favour of $\sigma = \sigma_0$.
+
+
+## K = 2 Sample Test
+In the two-sample case, the effect size is defined as the ratio of the standard deviation of the respective populations, that is, as $\delta = \frac{\sigma_2}{\sigma_1}$. Here, we re-analyze peer-rated Conscientiousness data in Estonian men and women ($s_f^2 = 15.6$, $s_m^2 = 20.0$, $n_f = 969$, $n_m = 716$). We find strong evidence that men differ from women in peer-rated Conscientiousness:
+
+```{r}
+twosd_test(n1 = 716, n2 = 969, sd1 = 20, sd2 = 15.6, alpha = 4.50)
+```
+
+We can also conduct a directed test using:
+
+```{r}
+twosd_test(n1 = 716, n2 = 969, sd1 = 20, sd2 = 15.6, alpha = 4.50, alternative_interval = c(0, 1))
+```
+
+which is roughly double the size of the undirected Bayes factor (after exponentiating).
+
+
+## K > 2 Sample Test
+With $K > 2$ groups, one can entertain more complicated hypotheses that mix equality, inequality, and no constraints between parameters. For example, one might wish to test hypotheses of the form:
+
+$$
+\begin{aligned}
+\mathcal{H}_0&: \sigma_1 = \sigma_2 = \sigma_3 = \sigma_4 = \sigma_5 \\[.50em]
+\mathcal{H}_1&: \sigma_1 , \sigma_2 , \sigma_3 , \sigma_4 , \sigma_5 \\[.50em]
+\mathcal{H}_r&: \sigma_1 > \sigma_2 = \sigma_3 > \sigma_4, \sigma_5 \enspace ,
+\end{aligned}
+$$
+
+where $\mathcal{H}_r$ states that $\sigma_1$ is larger than all other population standard deviations, that $\sigma_2$ equals $\sigma_3$, that $\sigma_3$ is larger than $\sigma_4$ and $\sigma_5$, and that there are no constraints between $\sigma_4$ and $\sigma_5$. To illustrate such a test, assume that we observe:
+
+```{r}
+ns <- rep(100, 5)
+sds <- c(5, 4, 4, 3, 1)
+```
+
+which is strongly in line with $\mathcal{H}_r$. To test these hypotheses, we write:
+
+```{r}
+hyp <- c('1=2=3=4=5', '1,2,3,4,5', '1>2=3>4,5')
+res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+
+res$BF
+```
+
+which shows that $\mathcal{H}_r$ outperforms all other hypotheses. We can select the fitted Stan object that corresponds to a particular hypothesis using the following, and from which any quantity of interest from the posterior can be computed:
+
+```{r}
+res$`1,2,3,4,5`
+```
+
+
+

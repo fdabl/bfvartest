@@ -1,11 +1,11 @@
-# Computes the log marginal likelihood for 1 = 2 hypothesis
+# Computes the log marginal likelihood for H1 in the one-sample test
 .compute_logml_restr_k1 <- function(n, s2, popsd, interval, alpha = 0.50) {
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
-  # Prior distribution, centered at \tau_0
+  # Prior distribution centered at \tau_0
   scaled_lbetaprime <- function(tau, tau0, alpha) {
-    value <- (alpha - 1) * log(tau / tau0) - 2*alpha *
+    value <- (alpha - 1) * log(tau / tau0) - 2 * alpha *
              log(1 + tau / tau0) - log(tau0) - lbeta(alpha, alpha)
     value
   }
@@ -13,13 +13,13 @@
   # Change normalizing constant when prior is restricted
   lo <- interval[1]
   hi <- interval[2]
-  hiZ <- integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
-  loZ <- ifelse(lo == 0, 0, integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value)
-  Z <- hiZ - loZ
+  hi_Z <- integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
+  lo_Z <- ifelse(lo == 0, 0, integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value)
+  Z <- hi_Z - lo_Z
 
   # Integrate likelihood with respect to prior
   value <- integrate(function(tau) {
-    llh <- (n - 1)/2 * log(tau) - 0.5 * tau * n * s2
+    llh <- (n - 1) / 2 * log(tau) - 0.5 * tau * n * s2
     lprior <- scaled_lbetaprime(tau, tau0, alpha)
 
     exp(llh + lprior - log(Z))
@@ -29,7 +29,7 @@
 }
 
 
-# Computes the log marginal likelihood for K = 2 hypothesis
+# Computes the log marginal likelihood for H1 in the two-sample test
 .compute_logml_restr_k2 <- function(n1, n2, s1, s2, interval, alpha = 0.50) {
   n <- n1 + n2
 
@@ -44,9 +44,9 @@
   # Integrate likelihood with respect to prior
   value <- Rmpfr::integrateR(function(rho) {
     rho <- Rmpfr::mpfr(rho, 100)
-    llh <- ((n1 - 1)/2 + alpha - 1) * log(rho) +
-           ((n2 - 1)/2 + alpha - 1) * log(1 - rho) +
-           ((2 - n)/2) * log(rho*n1*s1 + (1 - rho)*n2*s2)
+    llh <- ((n1 - 1) / 2 + alpha - 1) * log(rho) +
+           ((n2 - 1) / 2 + alpha - 1) * log(1 - rho) +
+           ((2 - n) / 2) * log(rho * n1 * s1 + (1 - rho) * n2 * s2)
 
     exp(llh - log(Z) - lbeta(alpha, alpha))
   }, lo, hi)$value
@@ -58,21 +58,22 @@
 # Checks whether the intervals for the null and the alternative are correctly specified
 .check_interval_input <- function(alternative_interval, null_interval) {
 
-  alt_condition <- all(is.numeric(alternative_interval)) &&
-                   alternative_interval[2] > alternative_interval[1] &&
-                   all(alternative_interval >= 0)
+  is_correct <- function(interval) {
+    all(is.numeric(interval)) &&
+    interval[2] > interval[1] &&
+    all(interval >= 0)
+  }
 
-  if (!alt_condition) {
+  if (!is_correct(alternative_interval)) {
     stop('Something is off with your specification of the alternative_interval!')
   }
 
   if (!is.null(null_interval)) {
     null_condition <- all(is.numeric(null_interval)) &&
-                      all(null_interval >= 0) &&
                       null_interval[2] > null_interval[1] &&
                       all(null_interval >= 0)
 
-    if (!null_condition) {
+    if (!is_correect(null_interval)) {
       stop('Something is off with your specification of the null_interval!')
     }
   }
@@ -83,29 +84,30 @@
 # 1<2<3 -> 1 / factorial(3)
 # 1<2,3 -> factorial(2) / factorial(3)
 .compute_prior_restr <- function(hyp) {
-  s <- strsplit(hyp, '<')[[1]]
-  n <- length(s)
+  sblock <- strsplit(hyp, '<')[[1]]
+  nblock <- length(sblock)
 
   ss <- strsplit(hyp, '')[[1]]
   ngroups <- as.numeric(ss[length(ss)])
   num <- factorial(ngroups)
 
-  for (i in seq(n)) {
-    num <- num / factorial(length(strsplit(s[i], ',')[[1]]))
+  for (i in seq(nblock)) {
+    num <- num / factorial(length(strsplit(sblock[i], ',')[[1]]))
   }
 
   1 / num
 }
 
 
-# Remove equality constraints from the hypothesis, e.g. '1,2<3=4,5<6' -> '1,2<3,4<5'
-.reduce_hyp_equals <- function(string) {
-  n <- length(string)
+# Remove equality constraints from the hypotheses
+# e.g. c('1=2', '3,4,5=6', '7,8') -> c('1', '2,3,4', '5,6')
+.reduce_hyp_equals <- function(hyp) {
+  n <- length(hyp)
   res <- c()
   j <- 1
 
   for (i in seq(n)) {
-    si <- strsplit(string[i], ',')[[1]]
+    si <- strsplit(hyp[i], ',')[[1]]
     ni <- length(si)
 
     r <- j
@@ -194,7 +196,6 @@
 
   # Split hypothesis and count number of equalities (=),
   # order constraints (<), and no constraints (,)
-  check <- gsub('[0-9<=, ]', '.', hyp)
   rel <- strsplit(gsub('[0-9]', '', hyp), '')[[1]]
   rel[which(rel == '=')] <- 1
   rel[which(rel == '<')] <- 2
@@ -236,13 +237,13 @@
 
 # Extend print function to only show parameters tau and rho
 print.bfvar <- function(x) {
-  pars <- c('tau', 'rho')
-  print(x$fit, pars = pars)
+  print(x$fit, pars = 'sds')
 
   if (!is.null(x$logml)) {
     cat(paste0('\nLog Marginal Likelihood = ', round(x$logml, 3), '\n'))
   }
 }
+
 
 
 #' Estimates the model using Stan and computes the marginal likelihood
@@ -251,42 +252,42 @@ print.bfvar <- function(x) {
 #' @param ss a vector containing sample sum of squares
 #' @param ns a vector containing sample sizes
 #' @param a a vector specifying the value of the parameters of the Dirichlet prior
-#' @param compute_ml a logical specifying whether the marginal likelihood should be computes
+#' @param compute_ml a logical specifying whether the marginal likelihood should be computed
 #' @param priors_only a logical specifying whether we should only sample from the prior
 #' @param precision a logical specifying whether parameterization in terms of precision or variance is used
 #' @param ... arguments to rstan::sampling
-#'
 #' @returns an object of class 'bfvar', which is a stanfit object with a log marginal likelihood (if desired)
-.create_bfvar_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, ...) {
+.create_bfvar_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, silent = TRUE, ...) {
 
   # Translate hypothesis on variance / standard deviation into hypothesis on precision
   hyp <- gsub('>', '<', hyp)
   logml <- NULL
   standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
+  refresh <- ifelse(silent, 0, 200)
 
   # If hypothesis contrains only equalities (e.g., 1=2=3) or is of
   # mixed type (e.g., 1,2<3), then we use the Mixed.stan model
   if (!.is_only_ordered_and_equal(hyp) || .is_allequal(hyp)) {
-    fit <- rstan::sampling(stanmodels$Mixed, data = standat, ...)
+    fit <- suppressWarnings(rstan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
-      logml <- bridgesampling::bridge_sampler(fit)$logml
+      logml <- bridgesampling::bridge_sampler(fit, silent = silent)$logml
     }
 
   # If hypothesis contains only equalities and order-constraints (e.g., 1=2>3),
   # then we use the Ordered.stan model
   } else if (.is_only_ordered_and_equal(hyp)) {
-    fit <- rstan::sampling(stanmodels$Ordered, data = standat, ...)
+    fit <- suppressWarnings(rstan::sampling(stanmodels$Ordered, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
-      logml <- bridgesampling::bridge_sampler(fit)$logml
+      logml <- bridgesampling::bridge_sampler(fit, silent = silent)$logml
     }
 
   # For mixed hypothesis with no order-constraints (e.g., 1=2,3) we also use Mixed.stan
   # However, in contrast to above, we cannot rely on bridgesampling to
   # compute marginal likelihoods but have to use the Kluglist & Hoijtink (2005) trick
   } else {
-    fit <- rstan::sampling(stanmodels$Mixed, data = standat, ...)
+    fit <- suppressWarnings(stan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
       rho <- rstan::extract(fit, 'rho')$rho
@@ -294,7 +295,7 @@ print.bfvar <- function(x) {
 
       # Kluglist & Hoijtink (2005) trick
       BF_mixedequal_fullequal <- log(mean(apply(rho, 1, hyp_fn))) - log(.compute_prior_restr(hyp))
-      logml_fullequal <- bridgesampling::bridge_sampler(fit)$logml
+      logml_fullequal <- bridgesampling::bridge_sampler(fit, silent = silent)$logml
       logml <- BF_mixedequal_fullequal + logml_fullequal # this is logml_mixedequal
     }
   }

@@ -14,11 +14,13 @@ onesd_test(n, s, popsd, alpha = 0.5, alternative_interval = c(0, Inf),
 
 \item{popsd}{population standard deviation we test against}
 
-\item{alpha}{prior parameter}
+\item{alpha}{parameter of the prior}
 
 \item{alternative_interval}{interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)}
 
 \item{null_interval}{interval for the null hypothesis (e.g., c(0.9, 1.1))}
+
+\item{logarithm}{a logical specifying whether the log should be taken}
 }
 \value{
 The one-sample log Bayes factor in favour of H1 with delta = popsd / s
@@ -28,7 +30,15 @@ Computes the one-sample log Bayes factor in favour of H1
 }
 \examples{
 onesd_test(100, 1, 1, 0.50)
-onesd_test(100, 1, 1, 0.50, alternative_interval = c(1, Inf)) # one-sided test
-onesd_test(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1)) # interval Bayes factor
-onesd_test(100, 1, 1, 0.50, alternative_interval = c(1.1, Inf), null_interval = c(0.9, 1.1)) # one-sided interval Bayes factor
+
+# one-sided test
+onesd_test(100, 1, 1, 0.50, alternative_interval = c(1, Inf))
+
+# interval Bayes factor
+onesd_test(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1))
+
+# one-sided interval Bayes factor
+onesd_test(100, 1, 1, 0.50,
+          alternative_interval = c(1.1, Inf),
+          null_interval = c(0.9, 1.1))
 }

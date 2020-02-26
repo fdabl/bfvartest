@@ -1,0 +1,14 @@
+citHeader("To cite bfvartest in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Default Bayes Factors for Testing the (In)equality of Several Population Variances",
+  author       = "Dablander, Fabian and van den Bergh, Don and Ly, Alexander and Wagenmakers, Eric-Jan",
+  journal      = "arXiv",
+  year         = "2020",
+  url          = "TO ADD",
+
+  textVersion  =
+  paste("Dablander, F., van den Bergh, D., Ly, A., & Wagenmakers, E.-J.",
+        "Default Bayes Factors for Testing the (In)equality of Several Population Variances.",
+        "Available from arXiv.")
+)

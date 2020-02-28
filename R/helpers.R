@@ -178,7 +178,7 @@
 }
 
 
-# Checks whether hypothesis only includes ordinal and no constraints (e.g., '1<2=3<4')
+# Checks whether hypothesis only includes ordinal and no constraints (e.g., '1>2=3>4')
 .is_only_ordered_and_equal <- function(hyp) {
   s <- strsplit(hyp, '>')[[1]]
 
@@ -186,13 +186,32 @@
     length(strsplit(si, ',')[[1]]) == 1
   })
 
-  all(check)
+  all(check) && !.is_allequal(hyp)
+}
+
+
+# Checks whether hypothesis only includes equality and no constraints (e.g., '1,2=3,4')
+.is_only_unconstr_and_equal <- function(hyp) {
+  s <- strsplit(hyp, ',')[[1]]
+
+  check <- sapply(s, function(si) {
+    length(strsplit(si, '>')[[1]]) == 1
+  })
+
+  all(check) && !.is_allequal(hyp) %% !.is_allunequal(hyp)
 }
 
 
 # Checks whether hypothesis is all equal (e.g., '1=2=3=4')
 .is_allequal <- function(hyp) {
   s <- strsplit(hyp, '=')[[1]]
+  all(nchar(s) < 2)
+}
+
+
+# Checks whether hypothesis is all equal (e.g., '1,2,3,4')
+.is_allunequal <- function(hyp) {
+  s <- strsplit(hyp, ',')[[1]]
   all(nchar(s) < 2)
 }
 
@@ -276,9 +295,9 @@ print.bfvar <- function(x) {
   standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
   refresh <- ifelse(silent, 0, 200)
 
-  # If hypothesis contrains only equalities (e.g., 1=2=3) or is of
-  # mixed type (e.g., 1,2<3), then we use the Mixed.stan model
-  if (!.is_only_ordered_and_equal(hyp) || .is_allequal(hyp)) {
+  # If hypothesis contrains only equalities (e.g., 1=2=3) or
+  # contains no constraints (e.g., 1,2,3), or a mix (e.g., 1=2,3) then we use the Mixed.stan model
+  if (.is_allunequal(hyp) || .is_allequal(hyp) || .is_only_unconstr_and_equal(hyp)) {
     fit <- suppressWarnings(rstan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
@@ -294,10 +313,19 @@ print.bfvar <- function(x) {
       logml <- bridgesampling::bridge_sampler(fit, silent = silent)$logml
     }
 
-  # For mixed hypothesis with no order-constraints (e.g., 1=2,3) we also use Mixed.stan
+  # For mixed hypothesis with order-constraints (e.g., 1=2,3>4) we also use Mixed.stan
   # However, in contrast to above, we cannot rely on bridgesampling to
   # compute marginal likelihoods but have to use the Kluglist & Hoijtink (2005) trick
   } else {
+
+    # Example:
+    # (1) Remove order-constraints from the hypothesis '1=2,3>4' (Hr) to yield '1=2,3,4' (H1)
+    # (2) Compute the Bayes factor BFr1 in favour of '1=2,3>4' against '1=2,3=4' using Kluglist & Hoijtink (2005)
+    # (3) Get the marginal likelihood of H1 using bridgesampling
+    # (4) Get the marginal likelihood of Hr by multiplying BFr1 with the marginal likelihood of H1
+
+    hyp <- gsub('<', ',', hyp) # (1)
+    standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
     fit <- suppressWarnings(stan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
@@ -305,9 +333,9 @@ print.bfvar <- function(x) {
       hyp_fn <- eval(parse(text = .create_hyp_fn(hyp)))
 
       # Kluglist & Hoijtink (2005) trick
-      BF_mixedequal_fullequal <- log(mean(apply(rho, 1, hyp_fn))) - log(.compute_prior_restr(hyp))
-      logml_fullequal <- bridgesampling::bridge_sampler(fit, silent = silent)$logml
-      logml <- BF_mixedequal_fullequal + logml_fullequal # this is logml_mixedequal
+      BFr1 <- log(mean(apply(rho, 1, hyp_fn))) - log(.compute_prior_restr(hyp)) # (2)
+      logml1 <- bridgesampling::bridge_sampler(fit, silent = silent)$logml # (3)
+      logml <- BFr1 + logml1 # This is the log marginal likelihood of Hr # (4)
     }
   }
 

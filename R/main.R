@@ -74,14 +74,53 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
   s2 <- (sd2 * ((n2 - 1) / n2))^2
 
   if (is.null(null_interval)) {
-    logml0 <- ((2 - n1 - n2) / 2) * log(n1 * s1 + n2 * s2)
+    logml0 <- ((2 - n1 - n2) / 2) * log(n1 * s1 + n2 * s2) # proportional to logml0
   } else {
-    logml0 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = null_interval, alpha = alpha)
+    logml0 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = null_interval, alpha = alpha) # proportional to logml1
   }
 
   logml1 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = alternative_interval, alpha = alpha)
   val <- ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
   suppressWarnings(Rmpfr::asNumeric(val))
+}
+
+
+#' Computes the posterior density of \delta for the K = 2 case
+#'
+#' @export
+#' @param x numerical value
+#' @param n1 sample size of group 1
+#' @param n2 sample size of group 2
+#' @param sd1 sample standard deviation of group 1
+#' @param sd2 sample standard deviation of group 2
+#' @param alpha parameter of the prior
+#' @param interval interval of the prior
+#' @param logarithm a logical specifying whether the log should be taken
+#' @return The (log) density at x
+#' @examples
+#'
+#' ddelta2(seq(0, 2, .01), 100, 100, 1, 1)
+ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
+
+  # convert to sample sum of squares
+  n <- n1 + n2
+  s1 <- (sd1 * ((n1 - 1) / n1))^2
+  s2 <- (sd2 * ((n2 - 1) / n2))^2
+
+  # Normalizing constant
+  Z <- lbeta((n1 - 1)/2 + alpha, (n2 - 1)/2 + alpha) +
+    log(.Gauss2F1(2*alpha, (n2 - 1)/2 + alpha, (n - 2)/2 + 2*alpha, 1 - (n1 * s1) / (n2 * s2))) +
+    (-(n1 - 1)/2 + alpha) * log((n1 * s1) / (n2 * s2))
+
+  # Unnormalized density
+  val <- log(2) + (n1 - 2 + 2 * alpha) * log(x) + (-2 * alpha) * log(1 + x^2) +
+         ((2 - n) / 2) * log(x^2 * n1 * s1 / (n2 * s2) + 1)
+
+  if (logarithm) {
+    return(val - Z)
+  } else {
+    return(exp(val - Z))
+  }
 }
 
 

@@ -51,7 +51,18 @@
     exp(llh - log(Z) - lbeta(alpha, alpha))
   }, lo, hi)$value
 
+
   log(value)
+}
+
+
+# Required for the posterior of \delta in the K = 2 case
+.Gauss2F1 <- function(a, b, c, x){
+  if(x >= 0 & x < 1){
+    gsl::hyperg_2F1(a, b, c, x)
+  } else {
+    gsl::hyperg_2F1(c - a, b, c, 1 - 1 / (1 - x))/ (1 - x)^b
+  }
 }
 
 
@@ -73,7 +84,7 @@
                       null_interval[2] > null_interval[1] &&
                       all(null_interval >= 0)
 
-    if (!is_correect(null_interval)) {
+    if (!is_correct(null_interval)) {
       stop('Something is off with your specification of the null_interval!')
     }
   }

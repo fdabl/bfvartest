@@ -1,5 +1,5 @@
 context('K = 1 Sample Test')
-test_that('K = 2 Test gives expected results', {
+test_that('K = 1 Test gives expected results', {
   expect_true(onesd_test(100, 1, 1, 0.5) < 0) # log BF10 < 0
   expect_true(onesd_test(100, 1, 2, 0.5) > 0) # log BF10 > 0
 })
@@ -24,6 +24,15 @@ test_that('K = 2 test gives expected results', {
 
   # H1 is true: 1 is larger than 2
   expect_true(twosd_test(100, 100, 1, 2, 0.5, alternative_interval = c(0, 1)) < 0)
+})
+
+
+test_that('Posterior integrates to one', {
+  int1 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 100, 1, 1), 0, Inf)$value
+  int2 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 100, 1, 2), 0, Inf)$value
+  int3 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 100, 2, 1), 0, Inf)$value
+  int4 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 200, 2, 1), 0, Inf)$value
+  expect_true(all(abs(c(int1, int2, int3, int4) - 1) < .001))
 })
 
 

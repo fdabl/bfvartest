@@ -195,10 +195,10 @@
   s <- strsplit(hyp, ',')[[1]]
 
   check <- sapply(s, function(si) {
-    length(strsplit(si, '>')[[1]]) == 1
+    length(strsplit(si, '<')[[1]]) == 1
   })
 
-  all(check) && !.is_allequal(hyp) %% !.is_allunequal(hyp)
+  all(check) && !.is_allequal(hyp) && !.is_allunequal(hyp)
 }
 
 
@@ -275,7 +275,6 @@ print.bfvar <- function(x) {
 }
 
 
-
 #' Estimates the model using Stan and computes the marginal likelihood
 #'
 #' @param hypothesis a string specifying the hypothesis
@@ -296,7 +295,7 @@ print.bfvar <- function(x) {
   refresh <- ifelse(silent, 0, 200)
 
   # If hypothesis contrains only equalities (e.g., 1=2=3) or
-  # contains no constraints (e.g., 1,2,3), or a mix (e.g., 1=2,3) then we use the Mixed.stan model
+  # contains no constraints (e.g., 1,2,3) or a mix (e.g., 1=2,3), then we use the Mixed.stan model
   if (.is_allunequal(hyp) || .is_allequal(hyp) || .is_only_unconstr_and_equal(hyp)) {
     fit <- suppressWarnings(rstan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
@@ -324,9 +323,9 @@ print.bfvar <- function(x) {
     # (3) Get the marginal likelihood of H1 using bridgesampling
     # (4) Get the marginal likelihood of Hr by multiplying BFr1 with the marginal likelihood of H1
 
-    hyp <- gsub('<', ',', hyp) # (1)
-    standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
-    fit <- suppressWarnings(stan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
+    hyp1 <- gsub('<', ',', hyp) # (1)
+    standat <- .prepare_standat(hyp1, ns, ss, a, priors_only = priors_only)
+    fit <- suppressWarnings(rstan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
       rho <- rstan::extract(fit, 'rho')$rho

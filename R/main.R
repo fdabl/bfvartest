@@ -85,7 +85,7 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
 }
 
 
-#' Computes the posterior density of \delta for the K = 2 case
+#' Computes the posterior density of delta for the K = 2 case
 #'
 #' @export
 #' @param x numerical value

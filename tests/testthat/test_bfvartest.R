@@ -100,7 +100,10 @@ test_that('ksd_test gives same result as (undirected) twosd_test for K = 2', {
   ns <- c(100, 100)
   hyp <- c('1,2', '1=2')
 
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50)
+  # lml <- log_marginal_likelihoods(sds, ns, hypotheses = hyp)
+  # mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
+
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
   bf10 <- twosd_test(ns[1], ns[2], sds[1], sds[2])
   expect_true(abs(res$BF[1, 2] - bf10) < .05)
 })
@@ -115,46 +118,90 @@ test_that('ksd_test gives same result as (directed) twosd_test for K = 2', {
   bfr0 <- twosd_test(ns[1], ns[2], sds[1], sds[2], alternative_interval = c(0, 1))
   bfr1 <- bfr0 - bf10
 
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, priors_only = FALSE)
-  expect_true(abs(res$BF[2, 1] - bfr1) < .05)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  expect_true(abs(res$BF[2, 1] - bfr1) < .01)
 })
 
 
-test_that('All cases work', {
-  sds <- c(3, 2, 1)
+test_that('Respects evidence bound in ordinal hypotheses', {
+  sds <- c(10, 5, 1)
+  ns <- c(500, 500, 500)
+  hyp <- c('1,2,3', '1>2>3')
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, silent = FALSE, chains = 6, iter = 6000)
+
+  expect_true(abs(res$BF[2, 1] - log(factorial(3))) < 0.01)
+})
+
+
+test_that('Mixed equality and ordinal hypotheses make sense', {
+  sds <- c(2, 2, 1)
+  ns <- c(500, 500, 500)
+  hyp <- c('1=2,3', '1=2>3')
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, silent = FALSE, chains = 6, iter = 6000)
+
+  # odd that they have evidence larger than double in favour of 1=2>3
+  # lml <- log_marginal_likelihoods(rev(sds), ns, hypotheses = c('1,2=3', '1<2=3'))
+  # mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
+  # colnames(mulderBF) <- rownames(mulderBF) <- hyp
+
+  # expect_true(res$BF[2, 1] > 0)
+  expect_true(abs(res$BF[2, 1] - log(factorial(2))) < 0.01)
+})
+
+
+test_that('Evidence ordering makes sense', {
+  sds <- c(2, 1.5, 1)
   ns <- c(100, 100, 100)
-  hyp <- c('1>2>3', '1=2=3', '1,2,3', '1,2=3', '1,2>3', '1=2>3')
-
+  hyp <- c('1>2>3', '1,2>3', '1,2,3', '1=2>3', '1=2=3')
   res <- ksd_test(hyp, ns, sds, alpha = 0.50)
+
+  res$BF <- NULL
+  logmls <- sapply(res, function(x) x$logml)
+  expect_true(all(logmls == sort(logmls, decreasing = TRUE)))
 })
 
 
-# Z <- function(k, nr_equal, a = 0.50) {
-#   lgamma(a * (k - nr_equal)) - sum(lgamma(rep(a, k - nr_equal)))
-# }
-
-# ns <- rep(50, 3)
-# sds <- c(1, 1, 1)
-# hyp <- c('1,2,3', '1=2=3', '1>2>3')
-# hyp_mul <- c('1,2,3', '1=2=3', '1<2<3')
-# res <- ksd_test(hyp, ns, sds)
-#
-# lml <- log_marginal_likelihoods(sds, ns, hypotheses = hyp_mul)
+# ns <- rep(100, 4)
+# sds <- rep(1, 4)
+# hyp <- c('1,2,3,4', '1=2=3=4', '1>2>3>4', '1=2=3>4', '1,2,3=4', '1,2,3>4')
+# hyp_mul <- c('1,2,3,4', '1=2=3=4', '1<2<3<4', '1<2=3=4', '1=2,3,4', '1<2,3,4')
+# res <- ksd_test(hyp, ns, sds, silent = FALSE, iter = 4000, chains = 4)
+# #
+# lml <- log_marginal_likelihoods(rev(sds), ns, hypotheses = hyp_mul)
 # mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
 # colnames(mulderBF) <- rownames(mulderBF) <- colnames(res$BF)
-# mulderBF
-# res$BF
 #
-# ns <- rep(50, 2)
-# sds <- c(1, 1)
-# hyp <- c('1,2', '1=2', '1>2')
-# hyp_mul <- c('1,2', '1=2', '1<2')
-# res <- ksd_test(hyp, ns, sds)
-#
-# lml <- log_marginal_likelihoods(sds, ns, hypotheses = hyp_mul)
-# mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
-# colnames(mulderBF) <- rownames(mulderBF) <- colnames(res$BF)
-# mulderBF
-# res$BF
+# fn <- function(k, nr_equal, alpha = 0.50) lgamma(alpha * (k - nr_equal)) - sum(lgamma(rep(alpha, k - nr_equal)))
+# fn2 <- function(k, nr_equal, alpha = 0.50) sum(lgamma(rep(alpha, k - nr_equal)))
 #
 # bf10 <- twosd_test(ns[1], ns[2], sds[1], sds[2])
+# bfr0 <- twosd_test(ns[1], ns[2], sds[1], sds[2], alternative_interval = c(1, Inf))
+# bf1r <- bf10 - bfr0
+
+#
+# log_posterior <- function(pars, data) {
+#   N <- data$N
+#   k <- data$k
+#   rho <- pars['rho']
+#   tau <- pars['tau']
+#
+#   n <- (N - 1.0) / 2.0;
+#   b <- s2 * N;
+#   nplus <- sum(n);
+#
+#   out <- ((k - sum(N)) / 2.0) * log(2.0 * pi) + rep(-0.50, k) %*% log(N) +
+#     nplus * log(tau * k) + n %*% log(rho) - k * tau * (b / 2.0 %*%  rho)
+#
+#   out - 200
+# }
+#
+# samples <- lapply(As.mcmc.list(res$`1,2`$fit), function(mat) mat[, c(1, 6, 7)])
+# lb <- rep(0, 3)
+# ub <- c(1, 1, Inf)
+# names(lb) <- names(ub) <- c("rho[1]", "rho[2]", 'tau')
+# bridge_sampler(
+#   samples = samples,
+#   log_posterior = log_posterior,
+#   data = list('N' = ns, 's2' = rep(1, 2), 'k' = 2),
+#   lb = lb, ub = ub
+# )

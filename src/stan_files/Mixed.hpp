@@ -36,7 +36,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_Mixed");
-    reader.add_event(54, 52, "end", "model_Mixed");
+    reader.add_event(55, 53, "end", "model_Mixed");
     return reader;
 }
 
@@ -190,8 +190,8 @@ public:
             current_statement_begin__ = 25;
             ++num_params_r__;
             current_statement_begin__ = 26;
-            validate_non_negative_index("rho_unconstrained", "k", k);
-            num_params_r__ += (k - 1);
+            validate_non_negative_index("lambda_unconstrained", "k", k);
+            num_params_r__ += k;
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
             // Next line prevents compiler griping about no return
@@ -225,19 +225,20 @@ public:
             throw std::runtime_error(std::string("Error transforming variable tau: ") + e.what());
         }
 
-        if (!(context__.contains_r("rho_unconstrained")))
-            throw std::runtime_error("variable rho_unconstrained missing");
-        vals_r__ = context__.vals_r("rho_unconstrained");
+        if (!(context__.contains_r("lambda_unconstrained")))
+            throw std::runtime_error("variable lambda_unconstrained missing");
+        vals_r__ = context__.vals_r("lambda_unconstrained");
         pos__ = 0U;
-        validate_non_negative_index("rho_unconstrained", "k", k);
-        context__.validate_dims("initialization", "rho_unconstrained", "vector_d", context__.to_vec(k));
-        vector_d rho_unconstrained(static_cast<Eigen::VectorXd::Index>(k));
-        for (int j1__ = 0U; j1__ < k; ++j1__)
-            rho_unconstrained(j1__) = vals_r__[pos__++];
-        try {
-            writer__.simplex_unconstrain(rho_unconstrained);
+        validate_non_negative_index("lambda_unconstrained", "k", k);
+        context__.validate_dims("initialization", "lambda_unconstrained", "double", context__.to_vec(k));
+        std::vector<double> lambda_unconstrained(k,double(0));
+        for (int i0__ = 0U; i0__ < k; ++i0__)
+            lambda_unconstrained[i0__] = vals_r__[pos__++];
+        for (int i0__ = 0U; i0__ < k; ++i0__)
+            try {
+            writer__.scalar_lb_unconstrain(0,lambda_unconstrained[i0__]);
         } catch (const std::exception& e) { 
-            throw std::runtime_error(std::string("Error transforming variable rho_unconstrained: ") + e.what());
+            throw std::runtime_error(std::string("Error transforming variable lambda_unconstrained: ") + e.what());
         }
 
         params_r__ = writer__.data_r();
@@ -280,12 +281,15 @@ public:
             else
                 tau = in__.scalar_lb_constrain(0);
 
-            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  rho_unconstrained;
-            (void) rho_unconstrained;  // dummy to suppress unused var warning
-            if (jacobian__)
-                rho_unconstrained = in__.simplex_constrain(k,lp__);
-            else
-                rho_unconstrained = in__.simplex_constrain(k);
+            vector<local_scalar_t__> lambda_unconstrained;
+            size_t dim_lambda_unconstrained_0__ = k;
+            lambda_unconstrained.reserve(dim_lambda_unconstrained_0__);
+            for (size_t k_0__ = 0; k_0__ < dim_lambda_unconstrained_0__; ++k_0__) {
+                if (jacobian__)
+                    lambda_unconstrained.push_back(in__.scalar_lb_constrain(0,lp__));
+                else
+                    lambda_unconstrained.push_back(in__.scalar_lb_constrain(0));
+            }
 
 
             // transformed parameters
@@ -303,19 +307,26 @@ public:
 
             stan::math::initialize(rho, DUMMY_VAR__);
             stan::math::fill(rho,DUMMY_VAR__);
+            current_statement_begin__ = 32;
+            validate_non_negative_index("lambda", "k", k);
+            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  lambda(static_cast<Eigen::VectorXd::Index>(k));
+            (void) lambda;  // dummy to suppress unused var warning
+
+            stan::math::initialize(lambda, DUMMY_VAR__);
+            stan::math::fill(lambda,DUMMY_VAR__);
 
 
             current_statement_begin__ = 33;
             for (int i = 1; i <= k; ++i) {
                 current_statement_begin__ = 33;
-                stan::model::assign(rho, 
+                stan::model::assign(lambda, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            get_base1(rho_unconstrained,get_base1(index_vector,i,"index_vector",1),"rho_unconstrained",1), 
-                            "assigning variable rho");
+                            get_base1(lambda_unconstrained,get_base1(index_vector,i,"index_vector",1),"lambda_unconstrained",1), 
+                            "assigning variable lambda");
             }
-            current_statement_begin__ = 34;
-            stan::math::assign(rho, stan::model::deep_copy(divide(rho,sum(rho))));
             current_statement_begin__ = 35;
+            stan::math::assign(rho, divide(lambda,sum(lambda)));
+            current_statement_begin__ = 36;
             stan::math::assign(sds, elt_divide(1.0,stan::math::sqrt(multiply(multiply(rho,tau),k))));
 
             // validate transformed parameters
@@ -333,26 +344,34 @@ public:
                     throw std::runtime_error(msg__.str());
                 }
             }
+            for (int i0__ = 0; i0__ < k; ++i0__) {
+                if (stan::math::is_uninitialized(lambda(i0__))) {
+                    std::stringstream msg__;
+                    msg__ << "Undefined transformed parameter: lambda" << '[' << i0__ << ']';
+                    throw std::runtime_error(msg__.str());
+                }
+            }
 
             const char* function__ = "validate transformed params";
             (void) function__;  // dummy to suppress unused var warning
             current_statement_begin__ = 30;
             current_statement_begin__ = 31;
             stan::math::check_simplex(function__,"rho",rho);
+            current_statement_begin__ = 32;
 
             // model body
 
-            current_statement_begin__ = 39;
-            lp_accum__.add(-(stan::math::log(tau)));
             current_statement_begin__ = 40;
-            lp_accum__.add(dirichlet_log<propto__>(rho_unconstrained, rep_vector(alpha,k)));
-            current_statement_begin__ = 43;
+            lp_accum__.add(-(stan::math::log(tau)));
+            current_statement_begin__ = 41;
+            lp_accum__.add(gamma_log<propto__>(lambda_unconstrained, alpha, 1));
+            current_statement_begin__ = 44;
             lp_accum__.add((stan::math::lgamma((alpha * (k - nr_equal))) - sum(stan::math::lgamma(rep_vector(alpha,(k - nr_equal))))));
-            current_statement_begin__ = 45;
+            current_statement_begin__ = 46;
             if (as_bool(logical_negation(logical_eq(priors_only,1)))) {
 
-                current_statement_begin__ = 46;
-                lp_accum__.add((((((((k - sum(N)) / 2.0) * stan::math::log((2.0 * stan::math::pi()))) + dot_product(rep_vector(-(0.5),k),stan::math::log(N))) + (nplus * stan::math::log((tau * k)))) + dot_product(n,stan::math::log(rho))) - ((k * tau) * dot_product(divide(b,2.0),rho))));
+                current_statement_begin__ = 47;
+                lp_accum__.add((((((((k - sum(N)) / 2.0) * stan::math::log((2 * stan::math::pi()))) + dot_product(rep_vector(-(0.5),k),stan::math::log(N))) + (nplus * stan::math::log((tau * k)))) + dot_product(n,stan::math::log(rho))) - ((k * tau) * dot_product(divide(b,2.0),rho))));
             }
 
         } catch (const std::exception& e) {
@@ -381,9 +400,10 @@ public:
     void get_param_names(std::vector<std::string>& names__) const {
         names__.resize(0);
         names__.push_back("tau");
-        names__.push_back("rho_unconstrained");
+        names__.push_back("lambda_unconstrained");
         names__.push_back("sds");
         names__.push_back("rho");
+        names__.push_back("lambda");
     }
 
 
@@ -391,6 +411,9 @@ public:
         dimss__.resize(0);
         std::vector<size_t> dims__;
         dims__.resize(0);
+        dimss__.push_back(dims__);
+        dims__.resize(0);
+        dims__.push_back(k);
         dimss__.push_back(dims__);
         dims__.resize(0);
         dims__.push_back(k);
@@ -419,10 +442,14 @@ public:
         (void) function__;  // dummy to suppress unused var warning
         // read-transform, write parameters
         double tau = in__.scalar_lb_constrain(0);
-        vector_d rho_unconstrained = in__.simplex_constrain(k);
+        vector<double> lambda_unconstrained;
+        size_t dim_lambda_unconstrained_0__ = k;
+        for (size_t k_0__ = 0; k_0__ < dim_lambda_unconstrained_0__; ++k_0__) {
+            lambda_unconstrained.push_back(in__.scalar_lb_constrain(0));
+        }
         vars__.push_back(tau);
             for (int k_0__ = 0; k_0__ < k; ++k_0__) {
-            vars__.push_back(rho_unconstrained[k_0__]);
+            vars__.push_back(lambda_unconstrained[k_0__]);
             }
 
         // declare and define transformed parameters
@@ -448,25 +475,33 @@ public:
 
             stan::math::initialize(rho, DUMMY_VAR__);
             stan::math::fill(rho,DUMMY_VAR__);
+            current_statement_begin__ = 32;
+            validate_non_negative_index("lambda", "k", k);
+            Eigen::Matrix<local_scalar_t__,Eigen::Dynamic,1>  lambda(static_cast<Eigen::VectorXd::Index>(k));
+            (void) lambda;  // dummy to suppress unused var warning
+
+            stan::math::initialize(lambda, DUMMY_VAR__);
+            stan::math::fill(lambda,DUMMY_VAR__);
 
 
             current_statement_begin__ = 33;
             for (int i = 1; i <= k; ++i) {
                 current_statement_begin__ = 33;
-                stan::model::assign(rho, 
+                stan::model::assign(lambda, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
-                            get_base1(rho_unconstrained,get_base1(index_vector,i,"index_vector",1),"rho_unconstrained",1), 
-                            "assigning variable rho");
+                            get_base1(lambda_unconstrained,get_base1(index_vector,i,"index_vector",1),"lambda_unconstrained",1), 
+                            "assigning variable lambda");
             }
-            current_statement_begin__ = 34;
-            stan::math::assign(rho, stan::model::deep_copy(divide(rho,sum(rho))));
             current_statement_begin__ = 35;
+            stan::math::assign(rho, divide(lambda,sum(lambda)));
+            current_statement_begin__ = 36;
             stan::math::assign(sds, elt_divide(1.0,stan::math::sqrt(multiply(multiply(rho,tau),k))));
 
             // validate transformed parameters
             current_statement_begin__ = 30;
             current_statement_begin__ = 31;
             stan::math::check_simplex(function__,"rho",rho);
+            current_statement_begin__ = 32;
 
             // write transformed parameters
             if (include_tparams__) {
@@ -475,6 +510,9 @@ public:
             }
             for (int k_0__ = 0; k_0__ < k; ++k_0__) {
             vars__.push_back(rho[k_0__]);
+            }
+            for (int k_0__ = 0; k_0__ < k; ++k_0__) {
+            vars__.push_back(lambda[k_0__]);
             }
             }
             if (!include_gqs__) return;
@@ -524,7 +562,7 @@ public:
         param_names__.push_back(param_name_stream__.str());
         for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "rho_unconstrained" << '.' << k_0__;
+            param_name_stream__ << "lambda_unconstrained" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
 
@@ -539,6 +577,11 @@ public:
             for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
                 param_name_stream__.str(std::string());
                 param_name_stream__ << "rho" << '.' << k_0__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+            for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "lambda" << '.' << k_0__;
                 param_names__.push_back(param_name_stream__.str());
             }
         }
@@ -555,9 +598,9 @@ public:
         param_name_stream__.str(std::string());
         param_name_stream__ << "tau";
         param_names__.push_back(param_name_stream__.str());
-        for (int k_0__ = 1; k_0__ <= (k - 1); ++k_0__) {
+        for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
             param_name_stream__.str(std::string());
-            param_name_stream__ << "rho_unconstrained" << '.' << k_0__;
+            param_name_stream__ << "lambda_unconstrained" << '.' << k_0__;
             param_names__.push_back(param_name_stream__.str());
         }
 
@@ -572,6 +615,11 @@ public:
             for (int k_0__ = 1; k_0__ <= (k - 1); ++k_0__) {
                 param_name_stream__.str(std::string());
                 param_name_stream__ << "rho" << '.' << k_0__;
+                param_names__.push_back(param_name_stream__.str());
+            }
+            for (int k_0__ = 1; k_0__ <= k; ++k_0__) {
+                param_name_stream__.str(std::string());
+                param_name_stream__ << "lambda" << '.' << k_0__;
                 param_names__.push_back(param_name_stream__.str());
             }
         }

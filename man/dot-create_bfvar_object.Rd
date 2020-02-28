@@ -5,7 +5,7 @@
 \title{Estimates the model using Stan and computes the marginal likelihood}
 \usage{
 .create_bfvar_object(hyp, ns, ss, a, compute_ml = TRUE,
-  priors_only = FALSE, ...)
+  priors_only = FALSE, silent = TRUE, ...)
 }
 \arguments{
 \item{ns}{a vector containing sample sizes}

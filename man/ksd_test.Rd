@@ -4,8 +4,16 @@
 \alias{ksd_test}
 \title{Computes the k-sample log Bayes factor for all hypotheses}
 \usage{
-ksd_test(hyp, ns, sds, alpha = 0.5, logarithm = TRUE,
-  compute_ml = TRUE, priors_only = FALSE, ...)
+ksd_test(
+  hyp,
+  ns,
+  sds,
+  alpha = 0.5,
+  logarithm = TRUE,
+  compute_ml = TRUE,
+  priors_only = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hyp}{vector of hypotheses}

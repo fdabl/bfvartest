@@ -94,7 +94,7 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
 #' @param sd1 sample standard deviation of group 1
 #' @param sd2 sample standard deviation of group 2
 #' @param alpha parameter of the prior
-#' @param interval interval of the prior
+# @param interval interval of the prior
 #' @param logarithm a logical specifying whether the log should be taken
 #' @return The (log) density at x
 #' @examples

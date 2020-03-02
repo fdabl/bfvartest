@@ -4,8 +4,15 @@
 \alias{onesd_test}
 \title{Computes the one-sample log Bayes factor in favour of H1}
 \usage{
-onesd_test(n, s, popsd, alpha = 0.5, alternative_interval = c(0, Inf),
-  null_interval = NULL, logarithm = TRUE)
+onesd_test(
+  n,
+  s,
+  popsd,
+  alpha = 0.5,
+  alternative_interval = c(0, Inf),
+  null_interval = NULL,
+  logarithm = TRUE
+)
 }
 \arguments{
 \item{n}{sample size}

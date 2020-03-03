@@ -129,7 +129,7 @@ test_that('Respects evidence bound in ordinal hypotheses', {
   hyp <- c('1,2,3', '1>2>3')
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, silent = FALSE, chains = 6, iter = 6000)
 
-  expect_true(abs(res$BF[2, 1] - log(factorial(3))) < 0.01)
+  expect_true(abs(res$BF[2, 1] - lfactorial(3)) < 0.01)
 })
 
 

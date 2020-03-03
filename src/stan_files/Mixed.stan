@@ -15,10 +15,13 @@ transformed data {
   vector<lower = 0>[k] n;
   vector<lower = 0>[k] b;
   real nplus;
+  real lp_const;
 
   n = (N - 1.0) / 2.0;
   b = s2 .* N;
   nplus = sum(n);
+
+  lp_const = -0.5 * sum(log(N)) + (k - sum(N)) / 2.0 * log(2 * pi());
 }
 
 parameters {
@@ -30,24 +33,22 @@ transformed parameters {
   vector[k] sds;
   simplex[k] rho;
   vector[k] lambda;
+  vector[k] prec;
   for (i in 1:k) lambda[i] = lambda_unconstrained[index_vector[i]];
 
   rho = lambda / sum(lambda);
+  prec= rho * tau * k;
   sds = 1.0 ./ sqrt(rho * tau * k);
 }
 
 model{
-  target += -log(tau);
-  lambda_unconstrained ~ gamma(alpha, 1);
 
-  // adjust prior for equality constraints
-  target += lgamma(alpha * (k - nr_equal)) - sum(lgamma(rep_vector(alpha, k - nr_equal)));
+  target += -log(tau);
+  target += gamma_lpdf(lambda_unconstrained | alpha, 1);
 
   if (!(priors_only == 1)) {
-      target += (
-        ((k - sum(N))/2.0) * log(2*pi()) +
-        dot_product(rep_vector(-0.50, k), log(N)) +
-        nplus * log(tau*k) + dot_product(n, log(rho)) - k*tau*dot_product(b/2.0, rho)
-      );
+    target += lp_const;
+    target +=  dot_product(n, log(prec));
+    target += -0.5 * dot_product(prec, b);
   }
 }

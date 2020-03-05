@@ -145,7 +145,7 @@ test_that('Mixed equality and ordinal hypotheses make sense', {
   # colnames(mulderBF) <- rownames(mulderBF) <- hyp
 
   # expect_true(res$BF[2, 1] > 0)
-  expect_true(abs(res$BF[2, 1] - log(factorial(2))) < 0.01)
+  expect_true(abs(res$BF[2, 1] - lfactorial(2)) < 0.01)
 })
 
 

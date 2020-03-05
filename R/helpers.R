@@ -277,7 +277,7 @@ print.bfvar <- function(x) {
 
 #' Estimates the model using Stan and computes the marginal likelihood
 #'
-#' @param hypothesis a string specifying the hypothesis
+#' @param hyp a string specifying the hypothesis
 #' @param ss a vector containing sample sum of squares
 #' @param ns a vector containing sample sizes
 #' @param a a vector specifying the value of the parameters of the Dirichlet prior
@@ -286,17 +286,17 @@ print.bfvar <- function(x) {
 #' @param silent a logical specifying whether to print results from sampling and bridgesampling
 #' @param ... arguments to rstan::sampling
 #' @returns an object of class 'bfvar', which is a stanfit object with a log marginal likelihood (if desired)
-.create_bfvar_object <- function(hypothesis, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, silent = TRUE, ...) {
+.create_bfvar_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, silent = TRUE, ...) {
 
   # Translate hypothesis on variance / standard deviation into hypothesis on precision
-  hypothesis <- gsub('>', '<', hypothesis)
+  hyp <- gsub('>', '<', hyp)
   logml <- NULL
-  standat <- .prepare_standat(hypothesis, ns, ss, a, priors_only = priors_only)
+  standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
   refresh <- ifelse(silent, 0, 200)
 
   # If hypothesis contrains only equalities (e.g., 1=2=3) or
   # contains no constraints (e.g., 1,2,3) or a mix (e.g., 1=2,3), then we use the Mixed.stan model
-  if (.is_allunequal(hypothesis) || .is_allequal(hypothesis) || .is_only_unconstr_and_equal(hypothesis)) {
+  if (.is_allunequal(hyp) || .is_allequal(hyp) || .is_only_unconstr_and_equal(hyp)) {
     fit <- suppressWarnings(rstan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
@@ -305,7 +305,7 @@ print.bfvar <- function(x) {
 
   # If hypothesis contains only equalities and order-constraints (e.g., 1=2>3),
   # then we use the Ordered.stan model
-  } else if (.is_only_ordered_and_equal(hypothesis)) {
+  } else if (.is_only_ordered_and_equal(hyp)) {
     fit <- suppressWarnings(rstan::sampling(stanmodels$Ordered, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
@@ -323,16 +323,16 @@ print.bfvar <- function(x) {
     # (3) Get the marginal likelihood of H1 using bridgesampling
     # (4) Get the marginal likelihood of Hr by multiplying BFr1 with the marginal likelihood of H1
 
-    hyp1 <- gsub('<', ',', hypothesis) # (1)
+    hyp1 <- gsub('<', ',', hyp) # (1)
     standat <- .prepare_standat(hyp1, ns, ss, a, priors_only = priors_only)
     fit <- suppressWarnings(rstan::sampling(stanmodels$Mixed, data = standat, refresh = refresh, ...))
 
     if (compute_ml && !priors_only) {
       rho <- rstan::extract(fit, 'rho')$rho
-      hyp_fn <- eval(parse(text = .create_hyp_fn(hypothesis)))
+      hyp_fn <- eval(parse(text = .create_hyp_fn(hyp)))
 
       # Kluglist & Hoijtink (2005) trick
-      BFr1 <- log(mean(apply(rho, 1, hyp_fn))) - log(.compute_prior_restr(hypothesis)) # (2)
+      BFr1 <- log(mean(apply(rho, 1, hyp_fn))) - log(.compute_prior_restr(hyp)) # (2)
       logml1 <- bridgesampling::bridge_sampler(fit, silent = silent)$logml # (3)
       logml <- BFr1 + logml1 # This is the log marginal likelihood of Hr # (4)
     }

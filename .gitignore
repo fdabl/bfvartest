@@ -4,3 +4,5 @@ inst/doc
 .Rproj.user
 src/stan_files/Mixed.o
 src/stan_files/Ordered.o
+*.o
+*.so

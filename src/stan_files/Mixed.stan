@@ -1,19 +1,6 @@
 // This implements the mixed constrained model.
 // For example, if '1,2<3=4,5<6', then we sample from the reduced model '1,2,3,4,5'.
 // If, on the other hand, the model does not have equalities, we sample from the full, unconstrained model.
-functions {
-  real log_prior_equality_constraints(int nr_equal, int k, real alpha) {
-
-    real ans;
-    // ans  = lgamma(alpha * (k - nr_equal));
-    // ans += - (k - nr_equal) * lgamma(alpha);
-    // ans = -(k - nr_equal) * lgamma(alpha);
-    ans = lgamma(alpha * (k - nr_equal)) - (k - nr_equal) * lgamma(alpha);
-
-    return ans;
-
-  }
-}
 data {
   int k;
   real alpha;
@@ -28,15 +15,13 @@ transformed data {
   vector<lower = 0>[k] n;
   vector<lower = 0>[k] b;
   real nplus;
-  real ll_const; // constant from log likelihood
-  real lp_const; // constant from log prior
+  // real ll_const; // constant from log likelihood
 
   n = (N - 1.0) / 2.0;
   b = s2 .* N;
   nplus = sum(n);
 
-  ll_const = -0.5 * sum(log(N)) + (k - sum(N)) / 2.0 * log(2 * pi());
-  lp_const = log_prior_equality_constraints(nr_equal, k, alpha);
+  // ll_const = -0.5 * sum(log(N)) + (k - sum(N)) / 2.0 * log(2 * pi());
 }
 
 parameters {
@@ -60,9 +45,6 @@ model{
 
   target += -log(tau);
   lambda_unconstrained ~ gamma_lpdf(alpha, 1);
-
-  // adjust prior for equality constraints
-  // target += lp_const;
 
   if (!(priors_only == 1)) {
     // target += ll_const;

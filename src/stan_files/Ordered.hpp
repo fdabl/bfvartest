@@ -36,58 +36,9 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_Ordered");
-    reader.add_event(74, 72, "end", "model_Ordered");
+    reader.add_event(56, 54, "end", "model_Ordered");
     return reader;
 }
-
-template <typename T3__>
-typename boost::math::tools::promote_args<T3__>::type
-log_prior_order_and_equality_constraints(const int& nr_ordered,
-                                             const int& nr_equal,
-                                             const int& k,
-                                             const T3__& alpha, std::ostream* pstream__) {
-    typedef typename boost::math::tools::promote_args<T3__>::type local_scalar_t__;
-    typedef local_scalar_t__ fun_return_scalar_t__;
-    const static bool propto__ = true;
-    (void) propto__;
-        local_scalar_t__ DUMMY_VAR__(std::numeric_limits<double>::quiet_NaN());
-        (void) DUMMY_VAR__;  // suppress unused var warning
-
-    int current_statement_begin__ = -1;
-    try {
-        {
-        current_statement_begin__ = 5;
-        local_scalar_t__ ans(DUMMY_VAR__);
-        (void) ans;  // dummy to suppress unused var warning
-        stan::math::initialize(ans, DUMMY_VAR__);
-        stan::math::fill(ans, DUMMY_VAR__);
-
-
-        current_statement_begin__ = 6;
-        stan::math::assign(ans, stan::math::lgamma((nr_ordered + 1)));
-        current_statement_begin__ = 7;
-        stan::math::assign(ans, (ans + (stan::math::lgamma((alpha * (k - nr_equal))) - ((k - nr_equal) * stan::math::lgamma(alpha)))));
-        current_statement_begin__ = 9;
-        return stan::math::promote_scalar<fun_return_scalar_t__>(ans);
-        }
-    } catch (const std::exception& e) {
-        stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
-        // Next line prevents compiler griping about no return
-        throw std::runtime_error("*** IF YOU SEE THIS, PLEASE REPORT A BUG ***");
-    }
-}
-
-
-struct log_prior_order_and_equality_constraints_functor__ {
-    template <typename T3__>
-        typename boost::math::tools::promote_args<T3__>::type
-    operator()(const int& nr_ordered,
-                                             const int& nr_equal,
-                                             const int& k,
-                                             const T3__& alpha, std::ostream* pstream__) const {
-        return log_prior_order_and_equality_constraints(nr_ordered, nr_equal, k, alpha, pstream__);
-    }
-};
 
 class model_Ordered
   : public stan::model::model_base_crtp<model_Ordered> {
@@ -103,8 +54,6 @@ private:
         vector_d n;
         vector_d b;
         double nplus;
-        double ll_const;
-        double lp_const;
 public:
     model_Ordered(stan::io::var_context& context__,
         std::ostream* pstream__ = 0)
@@ -141,35 +90,35 @@ public:
 
         try {
             // initialize data block variables from context__
-            current_statement_begin__ = 13;
+            current_statement_begin__ = 3;
             context__.validate_dims("data initialization", "k", "int", context__.to_vec());
             k = int(0);
             vals_i__ = context__.vals_i("k");
             pos__ = 0;
             k = vals_i__[pos__++];
 
-            current_statement_begin__ = 14;
+            current_statement_begin__ = 4;
             context__.validate_dims("data initialization", "alpha", "double", context__.to_vec());
             alpha = double(0);
             vals_r__ = context__.vals_r("alpha");
             pos__ = 0;
             alpha = vals_r__[pos__++];
 
-            current_statement_begin__ = 15;
+            current_statement_begin__ = 5;
             context__.validate_dims("data initialization", "nr_equal", "int", context__.to_vec());
             nr_equal = int(0);
             vals_i__ = context__.vals_i("nr_equal");
             pos__ = 0;
             nr_equal = vals_i__[pos__++];
 
-            current_statement_begin__ = 16;
+            current_statement_begin__ = 6;
             context__.validate_dims("data initialization", "nr_ordered", "int", context__.to_vec());
             nr_ordered = int(0);
             vals_i__ = context__.vals_i("nr_ordered");
             pos__ = 0;
             nr_ordered = vals_i__[pos__++];
 
-            current_statement_begin__ = 17;
+            current_statement_begin__ = 7;
             validate_non_negative_index("index_vector", "k", k);
             context__.validate_dims("data initialization", "index_vector", "int", context__.to_vec(k));
             index_vector = std::vector<int>(k, int(0));
@@ -180,7 +129,7 @@ public:
                 index_vector[k_0__] = vals_i__[pos__++];
             }
 
-            current_statement_begin__ = 18;
+            current_statement_begin__ = 8;
             validate_non_negative_index("s2", "k", k);
             context__.validate_dims("data initialization", "s2", "vector_d", context__.to_vec(k));
             s2 = Eigen::Matrix<double, Eigen::Dynamic, 1>(k);
@@ -192,7 +141,7 @@ public:
             }
             check_greater_or_equal(function__, "s2", s2, 0);
 
-            current_statement_begin__ = 19;
+            current_statement_begin__ = 9;
             validate_non_negative_index("N", "k", k);
             context__.validate_dims("data initialization", "N", "vector_d", context__.to_vec(k));
             N = Eigen::Matrix<double, Eigen::Dynamic, 1>(k);
@@ -204,7 +153,7 @@ public:
             }
             check_greater_or_equal(function__, "N", N, 0);
 
-            current_statement_begin__ = 20;
+            current_statement_begin__ = 10;
             context__.validate_dims("data initialization", "priors_only", "int", context__.to_vec());
             priors_only = int(0);
             vals_i__ = context__.vals_i("priors_only");
@@ -213,54 +162,42 @@ public:
 
 
             // initialize transformed data variables
-            current_statement_begin__ = 24;
+            current_statement_begin__ = 14;
             validate_non_negative_index("n", "k", k);
             n = Eigen::Matrix<double, Eigen::Dynamic, 1>(k);
             stan::math::fill(n, DUMMY_VAR__);
 
-            current_statement_begin__ = 25;
+            current_statement_begin__ = 15;
             validate_non_negative_index("b", "k", k);
             b = Eigen::Matrix<double, Eigen::Dynamic, 1>(k);
             stan::math::fill(b, DUMMY_VAR__);
 
-            current_statement_begin__ = 26;
+            current_statement_begin__ = 16;
             nplus = double(0);
             stan::math::fill(nplus, DUMMY_VAR__);
 
-            current_statement_begin__ = 27;
-            ll_const = double(0);
-            stan::math::fill(ll_const, DUMMY_VAR__);
-
-            current_statement_begin__ = 28;
-            lp_const = double(0);
-            stan::math::fill(lp_const, DUMMY_VAR__);
-
             // execute transformed data statements
-            current_statement_begin__ = 30;
+            current_statement_begin__ = 19;
             stan::math::assign(n, divide(subtract(N, 1.0), 2.0));
-            current_statement_begin__ = 31;
+            current_statement_begin__ = 20;
             stan::math::assign(b, elt_multiply(s2, N));
-            current_statement_begin__ = 32;
+            current_statement_begin__ = 21;
             stan::math::assign(nplus, sum(n));
-            current_statement_begin__ = 33;
-            stan::math::assign(ll_const, ((-(0.5) * sum(stan::math::log(N))) + (((k - sum(N)) / 2.0) * stan::math::log((2 * stan::math::pi())))));
-            current_statement_begin__ = 34;
-            stan::math::assign(lp_const, log_prior_order_and_equality_constraints(nr_ordered, nr_equal, k, alpha, pstream__));
 
             // validate transformed data
-            current_statement_begin__ = 24;
+            current_statement_begin__ = 14;
             check_greater_or_equal(function__, "n", n, 0);
 
-            current_statement_begin__ = 25;
+            current_statement_begin__ = 15;
             check_greater_or_equal(function__, "b", b, 0);
 
 
             // validate, set parameter ranges
             num_params_r__ = 0U;
             param_ranges_i__.clear();
-            current_statement_begin__ = 38;
+            current_statement_begin__ = 26;
             num_params_r__ += 1;
-            current_statement_begin__ = 39;
+            current_statement_begin__ = 27;
             validate_non_negative_index("lambda_unconstrained", "k", k);
             num_params_r__ += k;
         } catch (const std::exception& e) {
@@ -284,7 +221,7 @@ public:
         std::vector<double> vals_r__;
         std::vector<int> vals_i__;
 
-        current_statement_begin__ = 38;
+        current_statement_begin__ = 26;
         if (!(context__.contains_r("tau")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable tau missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("tau");
@@ -298,7 +235,7 @@ public:
             stan::lang::rethrow_located(std::runtime_error(std::string("Error transforming variable tau: ") + e.what()), current_statement_begin__, prog_reader__());
         }
 
-        current_statement_begin__ = 39;
+        current_statement_begin__ = 27;
         if (!(context__.contains_r("lambda_unconstrained")))
             stan::lang::rethrow_located(std::runtime_error(std::string("Variable lambda_unconstrained missing")), current_statement_begin__, prog_reader__());
         vals_r__ = context__.vals_r("lambda_unconstrained");
@@ -348,7 +285,7 @@ public:
             stan::io::reader<local_scalar_t__> in__(params_r__, params_i__);
 
             // model parameters
-            current_statement_begin__ = 38;
+            current_statement_begin__ = 26;
             local_scalar_t__ tau;
             (void) tau;  // dummy to suppress unused var warning
             if (jacobian__)
@@ -356,7 +293,7 @@ public:
             else
                 tau = in__.scalar_lb_constrain(0);
 
-            current_statement_begin__ = 39;
+            current_statement_begin__ = 27;
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> lambda_unconstrained;
             (void) lambda_unconstrained;  // dummy to suppress unused var warning
             if (jacobian__)
@@ -365,51 +302,51 @@ public:
                 lambda_unconstrained = in__.positive_ordered_constrain(k);
 
             // transformed parameters
-            current_statement_begin__ = 43;
+            current_statement_begin__ = 31;
             validate_non_negative_index("sds", "k", k);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> sds(k);
             stan::math::initialize(sds, DUMMY_VAR__);
             stan::math::fill(sds, DUMMY_VAR__);
 
-            current_statement_begin__ = 44;
+            current_statement_begin__ = 32;
             validate_non_negative_index("rho", "k", k);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> rho(k);
             stan::math::initialize(rho, DUMMY_VAR__);
             stan::math::fill(rho, DUMMY_VAR__);
 
-            current_statement_begin__ = 45;
+            current_statement_begin__ = 33;
             validate_non_negative_index("lambda", "k", k);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> lambda(k);
             stan::math::initialize(lambda, DUMMY_VAR__);
             stan::math::fill(lambda, DUMMY_VAR__);
 
-            current_statement_begin__ = 46;
+            current_statement_begin__ = 34;
             validate_non_negative_index("prec", "k", k);
             Eigen::Matrix<local_scalar_t__, Eigen::Dynamic, 1> prec(k);
             stan::math::initialize(prec, DUMMY_VAR__);
             stan::math::fill(prec, DUMMY_VAR__);
 
             // transformed parameters block statements
-            current_statement_begin__ = 47;
+            current_statement_begin__ = 35;
             for (int i = 1; i <= k; ++i) {
-                current_statement_begin__ = 47;
+                current_statement_begin__ = 35;
                 stan::model::assign(lambda, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             get_base1(lambda_unconstrained, get_base1(index_vector, i, "index_vector", 1), "lambda_unconstrained", 1), 
                             "assigning variable lambda");
             }
-            current_statement_begin__ = 49;
+            current_statement_begin__ = 37;
             stan::math::assign(rho, divide(lambda, sum(lambda)));
-            current_statement_begin__ = 50;
+            current_statement_begin__ = 38;
             stan::math::assign(prec, multiply(multiply(rho, tau), k));
-            current_statement_begin__ = 51;
+            current_statement_begin__ = 39;
             stan::math::assign(sds, elt_divide(1.0, stan::math::sqrt(multiply(multiply(rho, tau), k))));
 
             // validate transformed parameters
             const char* function__ = "validate transformed params";
             (void) function__;  // dummy to suppress unused var warning
 
-            current_statement_begin__ = 43;
+            current_statement_begin__ = 31;
             size_t sds_j_1_max__ = k;
             for (size_t j_1__ = 0; j_1__ < sds_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(sds(j_1__))) {
@@ -418,7 +355,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable sds: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 44;
+            current_statement_begin__ = 32;
             size_t rho_j_1_max__ = k;
             for (size_t j_1__ = 0; j_1__ < rho_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(rho(j_1__))) {
@@ -429,7 +366,7 @@ public:
             }
             stan::math::check_simplex(function__, "rho", rho);
 
-            current_statement_begin__ = 45;
+            current_statement_begin__ = 33;
             size_t lambda_j_1_max__ = k;
             for (size_t j_1__ = 0; j_1__ < lambda_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(lambda(j_1__))) {
@@ -438,7 +375,7 @@ public:
                     stan::lang::rethrow_located(std::runtime_error(std::string("Error initializing variable lambda: ") + msg__.str()), current_statement_begin__, prog_reader__());
                 }
             }
-            current_statement_begin__ = 46;
+            current_statement_begin__ = 34;
             size_t prec_j_1_max__ = k;
             for (size_t j_1__ = 0; j_1__ < prec_j_1_max__; ++j_1__) {
                 if (stan::math::is_uninitialized(prec(j_1__))) {
@@ -450,18 +387,18 @@ public:
 
             // model body
 
-            current_statement_begin__ = 55;
+            current_statement_begin__ = 43;
             lp_accum__.add(-(stan::math::log(tau)));
-            current_statement_begin__ = 56;
+            current_statement_begin__ = 44;
             lp_accum__.add(gamma_lpdf<propto__>(lambda_unconstrained, alpha, 1));
-            current_statement_begin__ = 58;
+            current_statement_begin__ = 47;
             lp_accum__.add(stan::math::lgamma((k + 1)));
-            current_statement_begin__ = 67;
+            current_statement_begin__ = 49;
             if (as_bool(logical_negation(logical_eq(priors_only, 1)))) {
 
-                current_statement_begin__ = 69;
+                current_statement_begin__ = 51;
                 lp_accum__.add(dot_product(n, stan::math::log(prec)));
-                current_statement_begin__ = 70;
+                current_statement_begin__ = 52;
                 lp_accum__.add((-(0.5) * dot_product(prec, b)));
             }
 
@@ -557,44 +494,44 @@ public:
 
         try {
             // declare and define transformed parameters
-            current_statement_begin__ = 43;
+            current_statement_begin__ = 31;
             validate_non_negative_index("sds", "k", k);
             Eigen::Matrix<double, Eigen::Dynamic, 1> sds(k);
             stan::math::initialize(sds, DUMMY_VAR__);
             stan::math::fill(sds, DUMMY_VAR__);
 
-            current_statement_begin__ = 44;
+            current_statement_begin__ = 32;
             validate_non_negative_index("rho", "k", k);
             Eigen::Matrix<double, Eigen::Dynamic, 1> rho(k);
             stan::math::initialize(rho, DUMMY_VAR__);
             stan::math::fill(rho, DUMMY_VAR__);
 
-            current_statement_begin__ = 45;
+            current_statement_begin__ = 33;
             validate_non_negative_index("lambda", "k", k);
             Eigen::Matrix<double, Eigen::Dynamic, 1> lambda(k);
             stan::math::initialize(lambda, DUMMY_VAR__);
             stan::math::fill(lambda, DUMMY_VAR__);
 
-            current_statement_begin__ = 46;
+            current_statement_begin__ = 34;
             validate_non_negative_index("prec", "k", k);
             Eigen::Matrix<double, Eigen::Dynamic, 1> prec(k);
             stan::math::initialize(prec, DUMMY_VAR__);
             stan::math::fill(prec, DUMMY_VAR__);
 
             // do transformed parameters statements
-            current_statement_begin__ = 47;
+            current_statement_begin__ = 35;
             for (int i = 1; i <= k; ++i) {
-                current_statement_begin__ = 47;
+                current_statement_begin__ = 35;
                 stan::model::assign(lambda, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             get_base1(lambda_unconstrained, get_base1(index_vector, i, "index_vector", 1), "lambda_unconstrained", 1), 
                             "assigning variable lambda");
             }
-            current_statement_begin__ = 49;
+            current_statement_begin__ = 37;
             stan::math::assign(rho, divide(lambda, sum(lambda)));
-            current_statement_begin__ = 50;
+            current_statement_begin__ = 38;
             stan::math::assign(prec, multiply(multiply(rho, tau), k));
-            current_statement_begin__ = 51;
+            current_statement_begin__ = 39;
             stan::math::assign(sds, elt_divide(1.0, stan::math::sqrt(multiply(multiply(rho, tau), k))));
 
             if (!include_gqs__ && !include_tparams__) return;
@@ -602,7 +539,7 @@ public:
             const char* function__ = "validate transformed params";
             (void) function__;  // dummy to suppress unused var warning
 
-            current_statement_begin__ = 44;
+            current_statement_begin__ = 32;
             stan::math::check_simplex(function__, "rho", rho);
 
             // write transformed parameters

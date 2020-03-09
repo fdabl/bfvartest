@@ -13,12 +13,12 @@
   # Change normalizing constant when prior is restricted
   lo <- interval[1]
   hi <- interval[2]
-  hi_Z <- integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
-  lo_Z <- ifelse(lo == 0, 0, integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value)
+  hi_Z <- stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
+  lo_Z <- ifelse(lo == 0, 0, stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value)
   Z <- hi_Z - lo_Z
 
   # Integrate likelihood with respect to prior
-  value <- integrate(function(tau) {
+  value <- stats::integrate(function(tau) {
     llh <- (n - 1) / 2 * log(tau) - 0.5 * tau * n * s2
     lprior <- scaled_lbetaprime(tau, tau0, alpha)
 
@@ -38,7 +38,7 @@
   to_rho <- function(delta) ifelse(delta == Inf, 1, delta^2 / (1 + delta^2))
   lo <- to_rho(interval[1])
   hi <- to_rho(interval[2])
-  Z <- pbeta(hi, alpha, alpha) - pbeta(lo, alpha, alpha)
+  Z <- stats::pbeta(hi, alpha, alpha) - stats::pbeta(lo, alpha, alpha)
 
   # Rmpfr provides arbitrary precision floating point arithmetic
   # Integrate likelihood with respect to prior
@@ -277,13 +277,13 @@ print.bfvar <- function(x) {
 
 #' Estimates the model using Stan and computes the marginal likelihood
 #'
-#' @param hypothesis a string specifying the hypothesis
+#' @param hyp a string specifying the hypothesis
 #' @param ss a vector containing sample sum of squares
 #' @param ns a vector containing sample sizes
 #' @param a a vector specifying the value of the parameters of the Dirichlet prior
 #' @param compute_ml a logical specifying whether the marginal likelihood should be computed
 #' @param priors_only a logical specifying whether we should only sample from the prior
-#' @param precision a logical specifying whether parameterization in terms of precision or variance is used
+#' @param silent a logical specifying whether to print results from sampling and bridgesampling
 #' @param ... arguments to rstan::sampling
 #' @returns an object of class 'bfvar', which is a stanfit object with a log marginal likelihood (if desired)
 .create_bfvar_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, silent = TRUE, ...) {

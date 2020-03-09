@@ -4,10 +4,20 @@
 \alias{.create_bfvar_object}
 \title{Estimates the model using Stan and computes the marginal likelihood}
 \usage{
-.create_bfvar_object(hyp, ns, ss, a, compute_ml = TRUE,
-  priors_only = FALSE, silent = TRUE, ...)
+.create_bfvar_object(
+  hypothesis,
+  ns,
+  ss,
+  a,
+  compute_ml = TRUE,
+  priors_only = FALSE,
+  silent = TRUE,
+  ...
+)
 }
 \arguments{
+\item{hypothesis}{a string specifying the hypothesis}
+
 \item{ns}{a vector containing sample sizes}
 
 \item{ss}{a vector containing sample sum of squares}
@@ -18,11 +28,12 @@
 
 \item{priors_only}{a logical specifying whether we should only sample from the prior}
 
+\item{silent}{a logical specifying whether to print results from sampling and bridgesampling}
+
 \item{...}{arguments to rstan::sampling}
-
-\item{hypothesis}{a string specifying the hypothesis}
-
-\item{precision}{a logical specifying whether parameterization in terms of precision or variance is used}
+}
+\value{
+an object of class 'bfvar', which is a stanfit object with a log marginal likelihood (if desired)
 }
 \description{
 Estimates the model using Stan and computes the marginal likelihood

@@ -127,9 +127,9 @@ test_that('Respects evidence bound in ordinal hypotheses', {
   sds <- c(10, 5, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1,2,3', '1>2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, silent = FALSE, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
 
-  expect_true(abs(res$BF[2, 1] - log(factorial(3))) < 0.01)
+  expect_true(abs(res$BF[2, 1] - lfactorial(3)) < 0.01)
 })
 
 
@@ -137,7 +137,7 @@ test_that('Mixed equality and ordinal hypotheses make sense', {
   sds <- c(2, 2, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1=2,3', '1=2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, silent = FALSE, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
 
   # odd that they have evidence larger than double in favour of 1=2>3
   # lml <- log_marginal_likelihoods(rev(sds), ns, hypotheses = c('1,2=3', '1<2=3'))
@@ -145,7 +145,7 @@ test_that('Mixed equality and ordinal hypotheses make sense', {
   # colnames(mulderBF) <- rownames(mulderBF) <- hyp
 
   # expect_true(res$BF[2, 1] > 0)
-  expect_true(abs(res$BF[2, 1] - log(factorial(2))) < 0.01)
+  expect_true(abs(res$BF[2, 1] - lfactorial(2)) < 0.01)
 })
 
 

@@ -4,8 +4,16 @@
 \alias{twosd_test}
 \title{Computes the two-sample log Bayes factor in favour of H1}
 \usage{
-twosd_test(n1, n2, sd1, sd2, alpha = 0.5, alternative_interval = c(0,
-  Inf), null_interval = NULL, logarithm = TRUE)
+twosd_test(
+  n1,
+  n2,
+  sd1,
+  sd2,
+  alpha = 0.5,
+  alternative_interval = c(0, Inf),
+  null_interval = NULL,
+  logarithm = TRUE
+)
 }
 \arguments{
 \item{n1}{sample size of group 1}

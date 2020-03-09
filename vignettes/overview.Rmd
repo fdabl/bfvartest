@@ -114,7 +114,7 @@ which is strongly in line with $\mathcal{H}_r$. To test these hypotheses, we wri
 
 ```{r}
 hyp <- c('1=2=3=4=5', '1,2,3,4,5', '1>2=3>4,5')
-res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000, cores = 6)
 
 res$BF
 ```

@@ -1,4 +1,4 @@
-// This implements the only-order-constraint model, accommodating hypotheses such as '1<2<3<4'
+// This implements the only-order-constraint-and-equality model, accommodating hypotheses such as '1=2=3<4'
 data {
   int k;
   real alpha;
@@ -24,7 +24,7 @@ transformed data {
 
 parameters {
   real<lower=0> tau;
-  positive_ordered[k] lambda_unconstrained;
+  positive_ordered[k - nr_equal] lambda_unconstrained;
 }
 
 transformed parameters {
@@ -44,7 +44,7 @@ model{
   lambda_unconstrained ~ gamma_lpdf(alpha, 1);
 
   // adjust prior
-  target += lgamma(k + 1);
+  target += lgamma(nr_ordered + 1);
 
   if (!(priors_only == 1)) {
     // target += ll_const;

@@ -1,7 +1,7 @@
 context('K = 1 Sample Test')
 test_that('K = 1 Test gives expected results', {
-  expect_true(onesd_test(100, 1, 1, 0.5) < 0) # log BF10 < 0
-  expect_true(onesd_test(100, 1, 2, 0.5) > 0) # log BF10 > 0
+  expect_lt(onesd_test(100, 1, 1, 0.5), 0) # log BF10 < 0
+  expect_gt(onesd_test(100, 1, 2, 0.5), 0) # log BF10 > 0
 })
 
 
@@ -16,14 +16,14 @@ test_that('K = 2 test errors correctly (input check)', {
 
 
 test_that('K = 2 test gives expected results', {
-  expect_true(twosd_test(100, 100, 1, 1, 0.5) < 0)
-  expect_true(twosd_test(100, 100, 1, 2, 0.5) > 0)
+  expect_lt(twosd_test(100, 100, 1, 1, 0.5), 0)
+  expect_gt(twosd_test(100, 100, 1, 2, 0.5), 0)
 
   # H1 is true: 2 is larger than 1
-  expect_true(twosd_test(100, 100, 1, 2, 0.5, alternative_interval = c(1, Inf)) > 0)
+  expect_gt(twosd_test(100, 100, 1, 2, 0.5, alternative_interval = c(1, Inf)), 0)
 
   # H1 is true: 1 is larger than 2
-  expect_true(twosd_test(100, 100, 1, 2, 0.5, alternative_interval = c(0, 1)) < 0)
+  expect_lt(twosd_test(100, 100, 1, 2, 0.5, alternative_interval = c(0, 1)), 0)
 })
 
 
@@ -79,7 +79,7 @@ test_that('Prior probability of restriction is correct', {
   rho <- rstan::extract(bfvar$fit, 'rho')$rho
 
   hyp_fn <- eval(parse(text = .create_hyp_fn(hyp_prec)))
-  expect_true(abs(mean(apply(rho, 1, hyp_fn)) - .compute_prior_restr(hyp)) < 0.005)
+  expect_equal(mean(apply(rho, 1, hyp_fn)), .compute_prior_restr(hyp), tolerance = 0.005)
 })
 
 
@@ -105,7 +105,7 @@ test_that('ksd_test gives same result as (undirected) twosd_test for K = 2', {
 
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
   bf10 <- twosd_test(ns[1], ns[2], sds[1], sds[2])
-  expect_true(abs(res$BF[1, 2] - bf10) < .05)
+  expect_equal(res$BF[1, 2], bf10, tolerance = 0.05)
 })
 
 
@@ -119,7 +119,7 @@ test_that('ksd_test gives same result as (directed) twosd_test for K = 2', {
   bfr1 <- bfr0 - bf10
 
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
-  expect_true(abs(res$BF[2, 1] - bfr1) < .01)
+  expect_equal(res$BF[2, 1], bfr1, tolerance = 0.01)
 })
 
 
@@ -129,23 +129,32 @@ test_that('Respects evidence bound in ordinal hypotheses', {
   hyp <- c('1,2,3', '1>2>3')
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
 
-  expect_true(abs(res$BF[2, 1] - lfactorial(3)) < 0.01)
+  expect_equal(res$BF[2, 1], lfactorial(3), tolerance = 0.01)
 })
 
 
-test_that('Mixed equality and ordinal hypotheses make sense', {
+test_that('Mixed equality and ordinal hypotheses make sense I', {
   sds <- c(2, 2, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1=2,3', '1=2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000, cores = 6, silent = FALSE)
 
   # odd that they have evidence larger than double in favour of 1=2>3
   # lml <- log_marginal_likelihoods(rev(sds), ns, hypotheses = c('1,2=3', '1<2=3'))
   # mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
   # colnames(mulderBF) <- rownames(mulderBF) <- hyp
 
-  # expect_true(res$BF[2, 1] > 0)
-  expect_true(abs(res$BF[2, 1] - lfactorial(2)) < 0.01)
+  expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.01)
+})
+
+
+test_that('Mixed equality and ordinal hypotheses make sense II', {
+  sds <- c(4, 4, 4, 1)
+  ns <- c(500, 500, 500, 500)
+  hyp <- c('1=2=3,4', '1=2=3>4')
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 4, iter = 4000)
+
+  expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.01)
 })
 
 
@@ -159,49 +168,3 @@ test_that('Evidence ordering makes sense', {
   logmls <- sapply(res, function(x) x$logml)
   expect_true(all(logmls == sort(logmls, decreasing = TRUE)))
 })
-
-
-# ns <- rep(100, 4)
-# sds <- rep(1, 4)
-# hyp <- c('1,2,3,4', '1=2=3=4', '1>2>3>4', '1=2=3>4', '1,2,3=4', '1,2,3>4')
-# hyp_mul <- c('1,2,3,4', '1=2=3=4', '1<2<3<4', '1<2=3=4', '1=2,3,4', '1<2,3,4')
-# res <- ksd_test(hyp, ns, sds, silent = FALSE, iter = 4000, chains = 4)
-# #
-# lml <- log_marginal_likelihoods(rev(sds), ns, hypotheses = hyp_mul)
-# mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
-# colnames(mulderBF) <- rownames(mulderBF) <- colnames(res$BF)
-#
-# fn <- function(k, nr_equal, alpha = 0.50) lgamma(alpha * (k - nr_equal)) - sum(lgamma(rep(alpha, k - nr_equal)))
-# fn2 <- function(k, nr_equal, alpha = 0.50) sum(lgamma(rep(alpha, k - nr_equal)))
-#
-# bf10 <- twosd_test(ns[1], ns[2], sds[1], sds[2])
-# bfr0 <- twosd_test(ns[1], ns[2], sds[1], sds[2], alternative_interval = c(1, Inf))
-# bf1r <- bf10 - bfr0
-
-#
-# log_posterior <- function(pars, data) {
-#   N <- data$N
-#   k <- data$k
-#   rho <- pars['rho']
-#   tau <- pars['tau']
-#
-#   n <- (N - 1.0) / 2.0;
-#   b <- s2 * N;
-#   nplus <- sum(n);
-#
-#   out <- ((k - sum(N)) / 2.0) * log(2.0 * pi) + rep(-0.50, k) %*% log(N) +
-#     nplus * log(tau * k) + n %*% log(rho) - k * tau * (b / 2.0 %*%  rho)
-#
-#   out - 200
-# }
-#
-# samples <- lapply(As.mcmc.list(res$`1,2`$fit), function(mat) mat[, c(1, 6, 7)])
-# lb <- rep(0, 3)
-# ub <- c(1, 1, Inf)
-# names(lb) <- names(ub) <- c("rho[1]", "rho[2]", 'tau')
-# bridge_sampler(
-#   samples = samples,
-#   log_posterior = log_posterior,
-#   data = list('N' = ns, 's2' = rep(1, 2), 'k' = 2),
-#   lb = lb, ub = ub
-# )

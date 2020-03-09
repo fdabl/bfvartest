@@ -293,6 +293,7 @@ print.bfvar <- function(x) {
   logml <- NULL
   standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
   refresh <- ifelse(silent, 0, 200)
+  standat$nr_equal <- standat$nr_equal * !.is_allequal(hyp)
 
   # If hypothesis contrains only equalities (e.g., 1=2=3) or
   # contains no constraints (e.g., 1,2,3) or a mix (e.g., 1=2,3), then we use the Mixed.stan model

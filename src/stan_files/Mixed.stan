@@ -26,7 +26,7 @@ transformed data {
 
 parameters {
   real<lower=0> tau;
-  real<lower=0> lambda_unconstrained[k];
+  real<lower=0> lambda_unconstrained[k - nr_equal];
 }
 
 transformed parameters {

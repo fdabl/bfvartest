@@ -3,15 +3,7 @@ This R package allows one to test equality, inequality, and mixed hypotheses on 
 
 Specifically, the package allows testing hypotheses of the form:
 
-$$
-\begin{aligned}
-    \mathcal{H}_0&: \sigma_1 = \sigma_2 = \sigma_3 = \sigma_4 = \sigma_5 \\[.50em]
-    \mathcal{H}_1&: \sigma_1 , \sigma_2 , \sigma_3 , \sigma_4 , \sigma_5 \\[.50em]
-    \mathcal{H}_r&: \sigma_1 > \sigma_2 = \sigma_3 > \sigma_4, \sigma_5 \enspace ,
-\end{aligned}
-$$
-
-where $\mathcal{H}_r$ states that $\sigma_1$ is larger than all other population standard deviations, that $\sigma_2$ equals $\sigma_3$, that $\sigma_3$ is larger than $\sigma_4$ and $\sigma_5$, and that there are no constraints between $\sigma_4$ and $\sigma_5$.
+![Hypotheses](https://github.com/fdabl/bfvartest/blob/master/Variances-Math.gif)
 
 ## Overview
 ```r

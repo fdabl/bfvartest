@@ -100,9 +100,6 @@ test_that('ksd_test gives same result as (undirected) twosd_test for K = 2', {
   ns <- c(100, 100)
   hyp <- c('1,2', '1=2')
 
-  # lml <- log_marginal_likelihoods(sds, ns, hypotheses = hyp)
-  # mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
-
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
   bf10 <- twosd_test(ns[1], ns[2], sds[1], sds[2])
   expect_equal(res$BF[1, 2], bf10, tolerance = 0.05)
@@ -137,12 +134,7 @@ test_that('Mixed equality and ordinal hypotheses make sense I', {
   sds <- c(2, 2, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1=2,3', '1=2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000, cores = 6, silent = FALSE)
-
-  # odd that they have evidence larger than double in favour of 1=2>3
-  # lml <- log_marginal_likelihoods(rev(sds), ns, hypotheses = c('1,2=3', '1<2=3'))
-  # mulderBF <- bayes_factors(lml, log.BF = TRUE)$AFBF
-  # colnames(mulderBF) <- rownames(mulderBF) <- hyp
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 8000, cores = 6)
 
   expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.01)
 })
@@ -152,9 +144,20 @@ test_that('Mixed equality and ordinal hypotheses make sense II', {
   sds <- c(4, 4, 4, 1)
   ns <- c(500, 500, 500, 500)
   hyp <- c('1=2=3,4', '1=2=3>4')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 4, iter = 4000)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 8000, cores = 6)
 
   expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.01)
+})
+
+
+test_that('Mixed equality and ordinal hypotheses make sense III', {
+  ns <- rep(100, 5)
+  sds <- c(5, 4, 4, 3, 1)
+  hyp <- c('1=2=3=4=5', '1,2,3,4,5', '1>2=3>4,5')
+
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  expect_gt(res$BF[3, 1], 1)
+  expect_gt(res$BF[3, 2], 1)
 })
 
 

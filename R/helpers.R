@@ -266,6 +266,7 @@
 
 
 # Extend print function to only show parameters tau and rho
+#' @export
 print.bfvar <- function(x) {
   print(x$fit, pars = 'sds')
 
@@ -330,6 +331,7 @@ print.bfvar <- function(x) {
 
     if (compute_ml && !priors_only) {
       rho <- rstan::extract(fit, 'rho')$rho
+      rho <- t(apply(rho, 1, unique)) # only get not equal parameters
       hyp_fn <- eval(parse(text = .create_hyp_fn(hyp)))
 
       # Kluglist & Hoijtink (2005) trick

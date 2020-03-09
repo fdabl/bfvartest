@@ -68,20 +68,20 @@ This yields $\text{BF}_{+0} = 0.0013$, or conversely, $\text{BF}_{0+} = 795$, wh
 In the two-sample case, the effect size is defined as the ratio of the standard deviation of the respective populations, that is, as $\delta = \frac{\sigma_2}{\sigma_1}$. Here, we re-analyze peer-rated Conscientiousness data in Estonian men and women ($s_f^2 = 15.6$, $s_m^2 = 20.0$, $n_f = 969$, $n_m = 716$). We find strong evidence that men differ from women in peer-rated Conscientiousness:
 
 ```{r}
-twosd_test(n1 = 969, n2 = 716, sd1 = 15.6, sd2 = 20, alpha = 4.50)
+twosd_test(n1 = 969, n2 = 716, sd1 = 3.95, sd2 = 4.47, alpha = 4.50)
 ```
 
 We can also conduct a directed test using:
 
 ```{r}
-twosd_test(n1 = 969, n2 = 716, sd1 = 15.6, sd2 = 20, alpha = 4.50, alternative_interval = c(1, Inf))
+twosd_test(n1 = 969, n2 = 716, sd1 = 3.95, sd2 = 4.47, alpha = 4.50, alternative_interval = c(1, Inf))
 ```
 
 which is roughly double the size of the undirected Bayes factor (after exponentiating). Since the posterior density is available in closed-form, we can easily visualize it:
 
 ```{r, fig.align = 'center', fig.width = 6, fig.height = 4}
 delta <- seq(0, 2, .001)
-post <- ddelta2(delta, n1 = 969, n2 = 716, sd1 = 15.6, sd2 = 20, alpha = 4.50)
+post <- ddelta2(delta, n1 = 969, n2 = 716, sd1 = 3.95, sd2 = 4.47, alpha = 4.50)
 
 plot(
   delta, post, type = 'l', ylim = c(0, 10), ylab = 'Density',

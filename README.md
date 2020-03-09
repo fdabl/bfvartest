@@ -3,7 +3,7 @@ This R package allows one to test equality, inequality, and mixed hypotheses on 
 
 
 ## Overview
-```{r}
+```r
 devtools::install_github('fdabl/bfvartest')
 library('bfvartest')
 
@@ -35,8 +35,8 @@ twosd_test(n1 = 969, n2 = 716, sd1 = 15.6, sd2 = 20, alpha = 4.50)
 
 
 # 3.1.1 The "Standardization" Hypothesis in Archeology
-ns <- c(55, 171, 117)
-sds <- c(5.83, 8.13, 12.74)
+ns <- c(117, 171, 55)
+sds <- c(12.74, 8.13, 5.83)
 hyp <- c('1=2=3', '1>2>3')
 res <- ksd_test(hyp = hyp, ns = ns, sds = sds, alpha = 0.50)
 res$BF

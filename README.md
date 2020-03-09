@@ -3,7 +3,9 @@ This R package allows one to test equality, inequality, and mixed hypotheses on 
 
 Specifically, the package allows testing hypotheses of the form:
 
-![Hypotheses](https://github.com/fdabl/bfvartest/blob/master/Variances-Math.gif)
+<p align='center'>
+  <img src='https://github.com/fdabl/bfvartest/blob/master/Variances-Math.png'/>
+</p>
 
 ## Overview
 ```r

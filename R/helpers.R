@@ -267,7 +267,7 @@
 
 # Extend print function to only show parameters tau and rho
 #' @export
-print.bfvar <- function(x) {
+print.bfvar <- function(x, ...) {
   print(x$fit, pars = 'sds')
 
   if (!is.null(x$logml)) {

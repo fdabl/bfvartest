@@ -1,6 +1,8 @@
 language: r
 sudo: false
 cache: packages
+r_check_args: '--as-cran'
+r_build_args: '--no-manual'
 
 matrix:
   include:
@@ -22,3 +24,8 @@ matrix:
 before_install:
   - mkdir -p ~/.R/
   - echo "CXX14=g++-7 -std=c++1y -fPIC" >> ~/.R/Makevars
+
+script:
+  - |
+    travis_wait 42 R CMD build .
+    travis_wait 70 R CMD check bfvartest*tar.gz

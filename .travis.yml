@@ -1,44 +1,31 @@
 language: r
 sudo: false
 cache: packages
-dist: trusty
-
-latex: true
-
-
-env:
-  global:
-    - MAKEFLAGS="-j 2"
+r_check_args: '--as-cran'
+r_build_args: '--no-manual'
 
 matrix:
   include:
     - os: linux
+      dist: trusty
+      r: release
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - libgsl-dev
+            - libmpfr-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - _R_CHECK_FORCE_SUGGESTS_=false
 
 before_install:
   - mkdir -p ~/.R/
-  - echo "PKG_LIBS = -ltbb" >> ~/.R/Makevars
-  - echo "CXX14 = g++-7 -fPIC -flto=2" >> ~/.R/Makevars
-  - echo "CXX14FLAGS = -mtune=native -march=native -Wno-unused-variable -Wno-unused-function -Wno-unused-local-typedefs -Wno-ignored-attributes -Wno-deprecated-declarations -Wno-attributes -O3" >> ~/.R/Makevars
+  - echo "CXX14=g++-7 -std=c++1y -fPIC" >> ~/.R/Makevars
 
 script:
   - |
     travis_wait 42 R CMD build .
-    travis_wait 59 R CMD check bfvartest*tar.gz
-
-after_script:
-  - tar -ztvf bfvartest_*.tar.gz
-  - echo ${NOT_CRAN}
-
-after_success:
-  - travis_wait 40 tar -C .. -xf $PKG_TARBALL
-
-after_failure:
-  - cat bfvartest.Rcheck/00*
+    travis_wait 70 R CMD check bfvartest*tar.gz

@@ -1,5 +1,7 @@
-# Bayes factors for Testing Variances
-This R package allows one to test equality, inequality, and mixed hypotheses on independent population variances. The method is described in Dablander, F.<sup>&#8902;</sup>, van den Bergh, D.<sup>&#8902;</sup>, Ly, A., Wagenmakers, E.-J. (2020) Default Bayes Factors for Testing the (In)equality of Several Population Variances.
+# Bayes factors for Comparing Variances
+[![Build Status](https://travis-ci.org/fdabl/bfvartest.svg?branch=master)](https://travis-ci.org/fdabl/bfvartest)
+
+This R package allows one to test equality, inequality, and mixed hypotheses on independent population variances. The method is described in Dablander, F.<sup>&#11089;</sup>, van den Bergh, D.<sup>&#11089;</sup>, Ly, A., Wagenmakers, E.-J. (2020) Default Bayes Factors for Testing the (In)equality of Several Population Variances.
 
 Specifically, the package allows testing hypotheses of the form:
 

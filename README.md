@@ -1,7 +1,7 @@
 # Bayes factors for Comparing Variances
 [![Build Status](https://travis-ci.org/fdabl/bfvartest.svg?branch=master)](https://travis-ci.org/fdabl/bfvartest)
 
-This R package allows one to test equality, inequality, and mixed hypotheses on independent population variances. The method is described in Dablander, F.<sup>&#11089;</sup>, van den Bergh, D.<sup>&#11089;</sup>, Ly, A., Wagenmakers, E.-J. (2020) Default Bayes Factors for Testing the (In)equality of Several Population Variances.
+This R package allows one to test equality, inequality, and mixed hypotheses on independent population variances. The method is described in Dablander, F.<sup>&#11089;</sup>, van den Bergh, D.<sup>&#11089;</sup>, Ly, A., Wagenmakers, E.-J. ([2020](https://arxiv.org/abs/2003.06278)) Default Bayes Factors for Testing the (In)equality of Several Population Variances.
 
 Specifically, the package allows testing hypotheses of the form:
 
@@ -13,13 +13,13 @@ Specifically, the package allows testing hypotheses of the form:
 ```r
 devtools::install_github('fdabl/bfvartest')
 library('bfvartest')
-
+  
 
 # 2.6.1 Testing Against a Single Value
 x <- c(6.2, 5.8, 5.7, 6.3, 5.9, 5.8, 6.0)
-onesd_test(
+1 / onesd_test(
     n = length(x), s = sd(x), popsd = sqrt(0.10),
-    alpha = 2.16, alternative_interval = c(1, Inf)
+    alpha = 2.16, alternative_interval = c(1, Inf), log = FALSE
 )
 
 
@@ -29,12 +29,12 @@ sdigit <- 0.98
 slaser <- 0.89
 twosd_test(
     n1 = n, n2 = n, sd1 = slaser, sd2 = sdigit,
-    alpha = 0.50, alternative_interval = c(1, Inf)
+    alpha = 0.50, alternative_interval = c(1, Inf), log = FALSE
 ) # H_+ vs H_0
 
 
-twosd_test(
-    n1 = n, n2 = n, sd1 = slaser, sd2 = sdigit, alpha = 0.50,
+1 / twosd_test(
+    n1 = n, n2 = n, sd1 = slaser, sd2 = sdigit, alpha = 0.50, log = FALSE,
     null_interval = c(0.90, 1.10), alternative_interval = c(1.10, Inf)
 ) # H'_1 vs H'_0
 

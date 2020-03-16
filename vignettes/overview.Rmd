@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this vignette, we discuss the functionality of the R package *bfvartest*, which computes Bayes factors for testing the (in)equality of independent population variances. In the following, we go over the $K = 1$, $K = 2$, and $K > 2$ sample tests, respectively, using the examples provided in Dablander, van den Bergh, Ly, and Wagenmakers (2020). Note that because it is easier to reason about standard deviations than variances, the functions expect standard deviations as inputs.
+In this vignette, we discuss the functionality of the R package *bfvartest*, which computes Bayes factors for testing the (in)equality of independent population variances. In the following, we go over the $K = 1$, $K = 2$, and $K > 2$ sample tests, respectively, using the examples provided in Dablander, van den Bergh, Ly, and Wagenmakers ([2020](https://arxiv.org/abs/2003.06278)). Note that because it is easier to reason about standard deviations than variances, the functions expect standard deviations as inputs.
 
 ## K = 1 Sample Test
 Suppos we observe the following data:

@@ -3,8 +3,7 @@ Title: Bayes factors for testing (in)equality constrained hypotheses on variance
 Version: 0.1.0
 Authors@R: c(
     person(given = "Fabian", family = "Dablander", role = c("aut", "cre"), email = "dablander.fabian@gmail.com"),
-    person(given = "Don", family = "van den Bergh", role = c("aut"), email = "DonvdBergh@hotmail.com")
-)
+    person(given = "Don", family = "van den Bergh", role = c("aut"), email = "DonvdBergh@hotmail.com"))
 Description: Computes Bayes factors for testing (in)equality constrained hypotheses
              on standard deviations (or variances) for independent outcomes / between-subjects designs.
              Accommodates K = 1 and K = 2 sample tests with intervall null hypotheses. For K > 2 sample tests,

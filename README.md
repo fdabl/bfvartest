@@ -11,7 +11,7 @@ Specifically, the package allows testing hypotheses of the form:
 
 ## Overview
 ```r
-devtools::install_github('fdabl/bfvartest')
+devtools::install_github('fdabl/bfvartest', build_vignettes = TRUE)
 library('bfvartest')
   
 

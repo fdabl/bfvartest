@@ -230,7 +230,8 @@
 
   # Split hypothesis and count number of equalities (=),
   # order constraints (<), and no constraints (,)
-  rel <- strsplit(gsub('[0-9]', '', hyp), '')[[1]]
+  rel_punct <- strsplit(gsub('[0-9]', '', hyp), '')[[1]]
+  rel <- rel_punct
   rel[which(rel == '=')] <- 1
   rel[which(rel == '<')] <- 2
   rel[which(rel == ',')] <- 3
@@ -244,14 +245,27 @@
   index <- 1
   count <- 1
   index_vector <- numeric(k)
-  strip <- strsplit(hyp, '')[[1]]
+
+  digits <- strsplit(hyp, '[[:punct:]]')[[1]]
+  nd <- length(digits)
+
+  strip <- c()
+
+  for (i in seq(nd)) {
+
+    if (i == nd) {
+      strip <- c(strip, digits[i])
+    } else {
+      strip <- c(strip, digits[i], rel_punct[i])
+    }
+  }
 
   for (i in seq(length(strip))) {
     if (strip[i] %in% c('<', ',')) {
       count <- count + 1
     }
 
-    if (grepl('[1-9]', strip[i])) {
+    if (suppressWarnings(!is.na(as.numeric(strip[i])))) {
       index_vector[index] <- count
       index <- index + 1
     }

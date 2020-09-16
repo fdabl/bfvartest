@@ -134,7 +134,20 @@ test_that('ksd_test gives same result as (directed) twosd_test for K = 2', {
   bfr1 <- bfr0 - bf10
 
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
-  expect_equal(res$BF[2, 1], bfr1, tolerance = 0.01)
+  expect_equal(res$BF[2, 1], bfr1, tolerance = 0.02)
+})
+
+
+test_that('ksd_test works for large K', {
+  hyp0 <- c('1=2=3=4=5=6=7=8=9=10=11=12=13=14=15=16=17=18=19=20=21')
+  hyp1 <- c('1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21')
+  hypr <- c('1,2,3,4,5,6=7=8=9=10=11=12=13,14,15,16>17>18>19=20,21')
+
+  ns <- rep(50, 21)
+  sds <- rep(10, 21)
+  m <- ksd_test(c(hyp0, hyp1, hypr), ns = ns, sds = sds)
+
+  expect_true(m$BF[1, 2] > 0 && m$BF[1, 3] > 0 && m$BF[2, 3] > 0)
 })
 
 

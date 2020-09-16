@@ -64,8 +64,26 @@ test_that('Parses the input correctly into a function', {
 test_that('Only Ordered and equal check works', {
   expect_true(.is_only_ordered_and_equal('1<2<3'))
   expect_true(.is_only_ordered_and_equal('1<2=3'))
+  expect_true(.is_only_ordered_and_equal('1<2=3=4=5=6=7=8=9<10<11=12'))
+
   expect_false(.is_only_ordered_and_equal('1<2,3'))
   expect_false(.is_only_ordered_and_equal('1<2=3,4<5'))
+  expect_false(.is_only_ordered_and_equal('1<2=3=4,5=6=7=8=9<10<11=12'))
+})
+
+
+test_that('Is all equal / unequal works', {
+  hyp0 <- '1=2=3=4=5=6=7=8=9=10=11=12'
+  hyp1 <- '1=2,3=4=5=6=7=8=9=10=11=12'
+  hyp2 <- '1,2,3,4,5,6,7,8,9,10,11,12'
+
+  expect_true(.is_allequal(hyp0))
+  expect_false(.is_allequal(hyp1))
+  expect_false(.is_allequal(hyp2))
+
+  expect_true(.is_allunequal(hyp2))
+  expect_false(.is_allunequal(hyp1))
+  expect_false(.is_allunequal(hyp0))
 })
 
 

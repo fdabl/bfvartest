@@ -205,14 +205,18 @@
 # Checks whether hypothesis is all equal (e.g., '1=2=3=4')
 .is_allequal <- function(hyp) {
   s <- strsplit(hyp, '=')[[1]]
-  all(nchar(s) < 2)
+
+  # If there is punctuation left beyond '=', than hyp is not all equal
+  !any(grepl('[[:punct:]]', s))
 }
 
 
-# Checks whether hypothesis is all equal (e.g., '1,2,3,4')
+# Checks whether hypothesis is all unequal (e.g., '1,2,3,4')
 .is_allunequal <- function(hyp) {
   s <- strsplit(hyp, ',')[[1]]
-  all(nchar(s) < 2)
+
+  # If there is punctuation left beyond ',', than hyp is not all unequal
+  !any(grepl('[[:punct:]]', s))
 }
 
 

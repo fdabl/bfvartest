@@ -1,4 +1,12 @@
-using Turing
+using Turing # 0.14.1 last time I checked
+
+#=
+
+	TODO:
+
+		write model using gamma variables
+
+=#
 
 # consider SVector!
 const VecFloat = Vector{Float64}
@@ -15,7 +23,7 @@ function myloglikelihood(n, b, ρ, τ)
 	return out
 end
 
-@model function bfvar(n::VecFloat, b::VecFloat, α::VecFloat)
+@model function bfvar_rho(n::VecFloat, b::VecFloat, α::VecFloat)
 
 	τ ~ Gamma(0.001, 0.001)
 	ρ ~ Dirichlet(α)
@@ -23,13 +31,33 @@ end
 
 end
 
-function samples_2_array(samples)
+@model function bfvar_gamma(n::VecFloat, b::VecFloat, α::VecFloat, ::Type{T} = Float64) where {T}
+
+	τ ~ Gamma(0.001, 0.001)
+	gammas = Vector{T}(undef, length(n))
+	for i in eachindex(gammas)
+		gammas[i] ~ Gamma(α[i], 1)
+	end
+	ρ = gammas ./ sum(gammas)
+	Turing.@addlogprob! myloglikelihood(n, b, ρ, τ)
+
+end
+
+function samples_2_array(samples, has_gamma::Bool = false)
 	# transform turing array to useful samples
 	samps = samples[samples.name_map.parameters].value.data[:, :, 1]
 	k = size(samps)[2] - 1
-	rhos = @view samps[:, 1:k]
+	if has_gamma
+		gammas = @view samps[:, 1:k]
+		rhos = similar(gammas)
+		for i in axes(rhos, 1)
+			rhos[i, :] = gammas[i, :] ./ sum(gammas[i, :])
+		end
+	else
+		rhos = @view samps[:, 1:k]
+	end
 	taus = @view samps[:, k + 1]
-	@assert all(isone, sum(rhos, dims = 2))
+	@assert all(x->(abs(x - 1)) < √eps(), sum(rhos, dims = 2))
 	precs = similar(rhos)
 	for i in axes(rhos, 1)
 		precs[i, :] = (taus[i] * k) .* rhos[i, :]
@@ -53,8 +81,14 @@ n = (ns .- 1) ./ 2
 b = ns .* ss
 α = ones(Float64, length(ss))
 
-model = bfvar(n, b, α)
-samples = sample(model, HMC(0.05, 10), 10_000)
+model_rho = bfvar_rho(n, b, α)
+samples_rho = sample(model_rho, HMC(0.05, 10), 10_000)
 
-means, samples2 = samples_2_array(samples)
-means
+means_rho, samples2_rho = samples_2_array(samples_rho)
+means_rho
+
+model_gamma = bfvar_gamma(n, b, α)
+samples_gamma = sample(model_gamma, HMC(0.05, 10), 10_000)
+
+means_gamma, samples2_gamma = samples_2_array(samples_gamma, true)
+means_gamma

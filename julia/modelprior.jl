@@ -14,7 +14,7 @@ function compute_probs(samps)
 end
 
 function print_probs(dimension, equal_indices)
-	
+
 	for d in sort(unique(dimension))
 		idx = findall(==(d), dimension)
 		println("times dimension == $(d): $(length(idx)) times")
@@ -26,21 +26,19 @@ end
 
 @model function prior(k::Int, α::Float64 = 1.0, β::Float64 = 1.0)
 
-	θ ~ Beta(α, β)
-	d ~ Binomial(k - 1, θ)
+	d ~ BetaBinomial(k - 1, α, β)
 	equal_indices ~ PartitionDistribution(d, k)
+	if !isfinite(logpdf(PartitionDistribution(d, k), equal_indices))
+		# Exit the model evaluation early
+		Turing.@addlogprob! -Inf
+		return
+	end
 
 end
 
-spl = Gibbs(HMC(0.2, 3, :θ), PG(20, :d), PG(20, :equal_indices))
-samples = sample(prior(3), spl, 10_000)
+n_groups = 4
+samples = sample(prior(n_groups), PG(20, :d, :equal_indices), 10_000)
 
 dimension = vec(Int.(samples[:d]))
-equal_indices = Int.(samples[samples.name_map.parameters[2:4]].value.data)
+equal_indices = Int.(samples[samples.name_map.parameters[2:1+n_groups]].value.data)
 print_probs(dimension, equal_indices)
-
-#= 
-	TODO: 
-		figure out why arent all edges connected when d = 0 and no edges connected when d = 2
-
-=#

@@ -1,5 +1,5 @@
 using Turing
-include("julia/PartitionDistriubtion.jl")
+include("julia/PartitionDistribution.jl")
 
 @model function bfvar_gamma_eq(n::VecFloat, b::VecFloat, α::VecFloat, ::Type{T} = Float64) where {T}
 
@@ -20,7 +20,7 @@ include("julia/PartitionDistriubtion.jl")
 	Turing.@addlogprob! myloglikelihood(n, b, ρ, τ)
 
 end
-
+myloglikelihood
 get_eq_ind_nms(samples) = filter(x->startswith(string(x), "equal_indices"), samples.name_map.parameters)
 
 function compute_post_prob_eq(samples)
@@ -47,7 +47,7 @@ n = (ns .- 1) ./ 2
 b = ns .* ss
 α = ones(Float64, length(ss))
 
-spl = Gibbs(HMC(0.2, 3, :τ, :gammas), PG(20, :d), PG(20, :equal_indices))
+spl = Gibbs(HMC(0.2, 3, :τ, :gammas), PG(20, :d, :equal_indices))
 model_gamma_eq = bfvar_gamma_eq(n, b, α)
 samples_gamma_eq = sample(model_gamma_eq, spl, 10_000)
 

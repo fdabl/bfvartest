@@ -17,6 +17,7 @@ jobs:
             - g++-7
             - libgsl-dev
             - libmpfr-dev
+            - libv8-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
         - _R_CHECK_FORCE_SUGGESTS_=false

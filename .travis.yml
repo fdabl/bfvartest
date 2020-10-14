@@ -1,13 +1,12 @@
 language: r
-sudo: false
 cache: packages
 r_check_args: '--as-cran'
 r_build_args: '--no-manual'
 
-matrix:
+jobs:
   include:
     - os: linux
-      dist: trusty
+      dist: xenial
       r: release
       addons:
         apt:
@@ -17,6 +16,7 @@ matrix:
             - g++-7
             - libgsl-dev
             - libmpfr-dev
+            - libv8-dev
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
         - _R_CHECK_FORCE_SUGGESTS_=false

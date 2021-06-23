@@ -20,9 +20,9 @@ twosd_test(
 
 \item{n2}{sample size of group 2}
 
-\item{sd1}{sample standard deviation of group 1}
+\item{sd1}{sample standard deviation of group 1 (with n1 - 1 as denominator)}
 
-\item{sd2}{sample standard deviation of group 2}
+\item{sd2}{sample standard deviation of group 2 (with n2 - 1 as denominator)}
 
 \item{alpha}{parameter of the prior}
 

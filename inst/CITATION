@@ -5,7 +5,7 @@ citEntry(entry = "Article",
   author       = "Dablander, Fabian and van den Bergh, Don and Ly, Alexander and Wagenmakers, Eric-Jan",
   journal      = "arXiv",
   year         = "2020",
-  url          = "TO ADD",
+  url          = "https://arxiv.org/abs/2003.06278",
 
   textVersion  =
   paste("Dablander, F., van den Bergh, D., Ly, A., & Wagenmakers, E.-J.",

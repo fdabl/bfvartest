@@ -13,13 +13,15 @@ ddelta2(x, n1, n2, sd1, sd2, alpha = 0.5, logarithm = FALSE)
 
 \item{n2}{sample size of group 2}
 
-\item{sd1}{sample standard deviation of group 1}
+\item{sd1}{sample standard deviation of group 1 (with n1 - 1 as denominator)}
 
-\item{sd2}{sample standard deviation of group 2}
+\item{sd2}{sample standard deviation of group 2 (with n2 - 1 as denominator)}
 
 \item{alpha}{parameter of the prior}
 
 \item{logarithm}{a logical specifying whether the log should be taken}
+
+\item{interval}{interval of the prior}
 }
 \value{
 The (log) density at x

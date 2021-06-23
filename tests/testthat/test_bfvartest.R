@@ -93,11 +93,11 @@ test_that('Prior probability of restriction is correct', {
 
   ns <- rep(100, 7)
   sds <- c(1, 2, 2, 5, 6, 6, 7)
-  bfvar <- .create_bfvar_object(hyp, ns, sds, 0.50, priors_only = TRUE, iter = 10000, cores = 6, chains = 6)
+  bfvar <- .create_bfvar_object(hyp, ns, sds, 0.50, priors_only = TRUE, iter = 1000, cores = 1, chains = 6)
   rho <- rstan::extract(bfvar$fit, 'rho')$rho
 
   hyp_fn <- eval(parse(text = .create_hyp_fn(hyp_prec)))
-  expect_equal(mean(apply(rho, 1, hyp_fn)), .compute_prior_restr(hyp), tolerance = 0.005)
+  expect_equal(mean(apply(rho, 1, hyp_fn)), .compute_prior_restr(hyp), tolerance = 0.05)
 })
 
 
@@ -134,7 +134,7 @@ test_that('ksd_test gives same result as (directed) twosd_test for K = 2', {
   bfr1 <- bfr0 - bf10
 
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
-  expect_equal(res$BF[2, 1], bfr1, tolerance = 0.02)
+  expect_equal(res$BF[2, 1], bfr1, tolerance = 0.05)
 })
 
 
@@ -157,7 +157,7 @@ test_that('Respects evidence bound in ordinal hypotheses', {
   hyp <- c('1,2,3', '1>2>3')
   res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
 
-  expect_equal(res$BF[2, 1], lfactorial(3), tolerance = 0.01)
+  expect_equal(res$BF[2, 1], lfactorial(3), tolerance = 0.05)
 })
 
 
@@ -165,9 +165,9 @@ test_that('Mixed equality and ordinal hypotheses make sense I', {
   sds <- c(2, 2, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1=2,3', '1=2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 8000, cores = 6)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 1000, cores = 1)
 
-  expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.01)
+  expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.05)
 })
 
 
@@ -175,9 +175,9 @@ test_that('Mixed equality and ordinal hypotheses make sense II', {
   sds <- c(4, 4, 4, 1)
   ns <- c(500, 500, 500, 500)
   hyp <- c('1=2=3,4', '1=2=3>4')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 8000, cores = 6)
+  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 1000, cores = 1)
 
-  expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.01)
+  expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.05)
 })
 
 

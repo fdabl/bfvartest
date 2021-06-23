@@ -20,15 +20,15 @@ ksd_test(
 
 \item{ns}{vector of sample sizes}
 
-\item{sds}{a vector containing the sample standard deviations}
+\item{sds}{vector containing the sample standard deviations (with ns - 1 as denominators)}
 
-\item{alpha}{parameter of the prior}
+\item{alpha}{numeric specifying the value of the parameters of the Dirichlet prior}
 
-\item{logarithm}{a logical specifying whether the log should be taken}
+\item{logarithm}{logical specifying whether the log should be taken}
 
-\item{compute_ml}{a logical specifying whether the marginal likelihood should be computed}
+\item{compute_ml}{logical specifying whether the marginal likelihood should be computed}
 
-\item{priors_only}{a logical specifying whether we should only sample from the prior}
+\item{priors_only}{logical specifying whether we should only sample from the prior}
 
 \item{...}{arguments to rstan::sampling}
 }

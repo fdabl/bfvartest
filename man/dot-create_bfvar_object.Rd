@@ -7,7 +7,7 @@
 .create_bfvar_object(
   hyp,
   ns,
-  ss,
+  sds,
   a,
   compute_ml = TRUE,
   priors_only = FALSE,
@@ -16,19 +16,19 @@
 )
 }
 \arguments{
-\item{hyp}{a string specifying the hypothesis}
+\item{hyp}{string specifying the hypothesis}
 
-\item{ns}{a vector containing sample sizes}
+\item{ns}{vector containing sample sizes}
 
-\item{ss}{a vector containing sample sum of squares}
+\item{sds}{vector containing sample standard deviations (with ns - 1 as denominator)}
 
-\item{a}{a vector specifying the value of the parameters of the Dirichlet prior}
+\item{a}{numeric specifying the value of the parameters of the Dirichlet prior}
 
-\item{compute_ml}{a logical specifying whether the marginal likelihood should be computed}
+\item{compute_ml}{logical specifying whether the marginal likelihood should be computed}
 
-\item{priors_only}{a logical specifying whether we should only sample from the prior}
+\item{priors_only}{logical specifying whether we should only sample from the prior}
 
-\item{silent}{a logical specifying whether to print results from sampling and bridgesampling}
+\item{silent}{logical specifying whether to print results from sampling and bridgesampling}
 
 \item{...}{arguments to rstan::sampling}
 }

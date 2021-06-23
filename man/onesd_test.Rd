@@ -17,7 +17,7 @@ onesd_test(
 \arguments{
 \item{n}{sample size}
 
-\item{s}{sample standard deviation}
+\item{s}{sample standard deviation (with n - 1 as denominator)}
 
 \item{popsd}{population standard deviation we test against}
 

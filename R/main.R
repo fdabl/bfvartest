@@ -2,7 +2,7 @@
 #'
 #' @export
 #' @param n sample size
-#' @param s sample standard deviation
+#' @param s sample standard deviation (with n - 1 as denominator)
 #' @param popsd population standard deviation we test against
 #' @param alpha parameter of the prior
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
@@ -26,17 +26,20 @@ onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
   .check_interval_input(alternative_interval, null_interval)
 
   # Convert to sample sum of squares
-  s2 <- (s * ((n - 1) / n))^2
+  s2 <- s^2
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
+  # degrees of freedom
+  v <- n - 1
+
   if (is.null(null_interval)) {
-    logml0 <- (n - 1) / 2 * log(tau0) - 0.50 * tau0 * n * s2
+    logml0 <- v / 2 * log(tau0) - tau0 * v * s2 / 2
   } else {
-    logml0 <- .compute_logml_restr_k1(n, s2, popsd, interval = null_interval, alpha = alpha)
+    logml0 <- .compute_logml_restr_k1(v, s2, popsd, interval = null_interval, alpha = alpha)
   }
 
-  logml1 <- .compute_logml_restr_k1(n, s2, popsd, interval = alternative_interval, alpha = alpha)
+  logml1 <- .compute_logml_restr_k1(v, s2, popsd, interval = alternative_interval, alpha = alpha)
   ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))
 }
 
@@ -46,8 +49,8 @@ onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
 #' @export
 #' @param n1 sample size of group 1
 #' @param n2 sample size of group 2
-#' @param sd1 sample standard deviation of group 1
-#' @param sd2 sample standard deviation of group 2
+#' @param sd1 sample standard deviation of group 1 (with n1 - 1 as denominator)
+#' @param sd2 sample standard deviation of group 2 (with n2 - 1 as denominator)
 #' @param alpha parameter of the prior
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
@@ -70,16 +73,21 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
   .check_interval_input(alternative_interval, null_interval)
 
   # convert to sample sum of squares
-  s1 <- (sd1 * ((n1 - 1) / n1))^2
-  s2 <- (sd2 * ((n2 - 1) / n2))^2
+  s1 <- sd1^2
+  s2 <- sd2^2
+
+  # degrees of freedom
+  v1 <- n1 - 1
+  v2 <- n2 - 1
+  v <- v1 + v2
 
   if (is.null(null_interval)) {
-    logml0 <- ((2 - n1 - n2) / 2) * log(n1 * s1 + n2 * s2) # proportional to logml0
+    logml0 <- (-v / 2) * log(v1 * s1 + v2 * s2) # proportional to logml0
   } else {
-    logml0 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = null_interval, alpha = alpha) # proportional to logml1
+    logml0 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = null_interval, alpha = alpha) # proportional to logml1
   }
 
-  logml1 <- .compute_logml_restr_k2(n1, n2, s1, s2, interval = alternative_interval, alpha = alpha)
+  logml1 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = alternative_interval, alpha = alpha)
   val <- ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
   suppressWarnings(Rmpfr::asNumeric(val))
 }
@@ -91,10 +99,9 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
 #' @param x numerical value
 #' @param n1 sample size of group 1
 #' @param n2 sample size of group 2
-#' @param sd1 sample standard deviation of group 1
-#' @param sd2 sample standard deviation of group 2
+#' @param sd1 sample standard deviation of group 1 (with n1 - 1 as denominator)
+#' @param sd2 sample standard deviation of group 2 (with n2 - 1 as denominator)
 #' @param alpha parameter of the prior
-# @param interval interval of the prior
 #' @param logarithm a logical specifying whether the log should be taken
 #' @return The (log) density at x
 #' @examples
@@ -103,18 +110,22 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
 ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
 
   # convert to sample sum of squares
-  n <- n1 + n2
-  s1 <- (sd1 * ((n1 - 1) / n1))^2
-  s2 <- (sd2 * ((n2 - 1) / n2))^2
+  s1 <- sd1^2
+  s2 <- sd2^2
+
+  # degrees of freedom
+  v1 <- n1 - 1
+  v2 <- n2 - 1
+  v <- v1 + v2
 
   # Normalizing constant
-  Z <- lbeta((n1 - 1)/2 + alpha, (n2 - 1)/2 + alpha) +
-    log(.Gauss2F1(2*alpha, (n2 - 1)/2 + alpha, (n - 2)/2 + 2*alpha, 1 - (n1 * s1) / (n2 * s2))) +
-    (-(n1 - 1)/2 + alpha) * log((n1 * s1) / (n2 * s2))
+  Z <- lbeta(v1/2 + alpha, v2/2 + alpha) +
+    log(.Gauss2F1(2*alpha, v2/2 + alpha, v/2 + 2*alpha, 1 - (v1 * s1) / (v2 * s2))) +
+    (-v1/2 + alpha) * log((v1 * s1) / (v2 * s2))
 
   # Unnormalized density
-  val <- log(2) + (n1 - 2 + 2 * alpha) * log(x) + (-2 * alpha) * log(1 + x^2) +
-         ((2 - n) / 2) * log(x^2 * n1 * s1 / (n2 * s2) + 1)
+  val <- log(2) + (v1 + 2 * alpha - 1) * log(x) + (-2 * alpha) * log(1 + x^2) +
+         (-v / 2) * log(x^2 * v1 * s1 / (v2 * s2) + 1)
 
   if (logarithm) {
     return(val - Z)
@@ -129,11 +140,11 @@ ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
 #' @export
 #' @param hyp vector of hypotheses
 #' @param ns vector of sample sizes
-#' @param sds a vector containing the sample standard deviations
-#' @param alpha parameter of the prior
-#' @param logarithm a logical specifying whether the log should be taken
-#' @param compute_ml a logical specifying whether the marginal likelihood should be computed
-#' @param priors_only a logical specifying whether we should only sample from the prior
+#' @param sds vector containing the sample standard deviations (with ns - 1 as denominators)
+#' @param alpha numeric specifying the value of the parameters of the Dirichlet prior
+#' @param logarithm logical specifying whether the log should be taken
+#' @param compute_ml logical specifying whether the marginal likelihood should be computed
+#' @param priors_only logical specifying whether we should only sample from the prior
 #' @param ... arguments to rstan::sampling
 #' @return A list of 'bfvar' objects, which include stanfit objects, log marginal likelihoods, and pairwise Bayes factors
 #' @examples
@@ -144,9 +155,6 @@ ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
 ksd_test <- function(hyp, ns, sds, alpha = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
   .check_user_input(hyp, ns, sds)
 
-  # Convert to sample sum of squares
-  ss <- (sds * ((ns - 1) / ns))^2
-
   # Translate hypothesis on variance / standard deviation into hypothesis on precision
   hyp2 <- gsub('>', '<', hyp)
   nr_hyp <- length(hyp)
@@ -154,7 +162,7 @@ ksd_test <- function(hyp, ns, sds, alpha = 0.50, logarithm = TRUE, compute_ml = 
 
   for (i in seq(nr_hyp)) {
     res[[hyp[i]]] <- .create_bfvar_object(
-      hyp2[i], ns, ss, alpha, priors_only = priors_only,
+      hyp2[i], ns, sds, alpha, priors_only = priors_only,
       compute_ml = ifelse(priors_only, FALSE, compute_ml), ...
     )
   }

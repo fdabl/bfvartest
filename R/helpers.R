@@ -1,5 +1,5 @@
 # Computes the log marginal likelihood for H1 in the one-sample test
-.compute_logml_restr_k1 <- function(n, s2, popsd, interval, alpha = 0.50) {
+.compute_logml_restr_k1 <- function(v, s2, popsd, interval, alpha = 0.50) {
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
@@ -19,7 +19,7 @@
 
   # Integrate likelihood with respect to prior
   value <- stats::integrate(function(tau) {
-    llh <- (n - 1) / 2 * log(tau) - 0.5 * tau * n * s2
+    llh <- v / 2 * log(tau) - tau * v * s2 / 2
     lprior <- scaled_lbetaprime(tau, tau0, alpha)
 
     exp(llh + lprior - log(Z))
@@ -30,8 +30,8 @@
 
 
 # Computes the log marginal likelihood for H1 in the two-sample test
-.compute_logml_restr_k2 <- function(n1, n2, s1, s2, interval, alpha = 0.50) {
-  n <- n1 + n2
+.compute_logml_restr_k2 <- function(v1, v2, s1, s2, interval, alpha = 0.50) {
+  v <- v1 + v2
 
   # Transform \delta to \rho
   # Change normalizing constant when prior is restricted
@@ -44,9 +44,9 @@
   # Integrate likelihood with respect to prior
   value <- Rmpfr::integrateR(function(rho) {
     rho <- Rmpfr::mpfr(rho, 100)
-    llh <- ((n1 - 1) / 2 + alpha - 1) * log(rho) +
-           ((n2 - 1) / 2 + alpha - 1) * log(1 - rho) +
-           ((2 - n) / 2) * log(rho * n1 * s1 + (1 - rho) * n2 * s2)
+    llh <- (v1 / 2 + alpha - 1) * log(rho) +
+           (v2 / 2 + alpha - 1) * log(1 - rho) +
+           (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
 
     exp(llh - log(Z) - lbeta(alpha, alpha))
   }, lo, hi)$value
@@ -296,20 +296,21 @@ print.bfvar <- function(x, ...) {
 
 #' Estimates the model using Stan and computes the marginal likelihood
 #'
-#' @param hyp a string specifying the hypothesis
-#' @param ss a vector containing sample sum of squares
-#' @param ns a vector containing sample sizes
-#' @param a a vector specifying the value of the parameters of the Dirichlet prior
-#' @param compute_ml a logical specifying whether the marginal likelihood should be computed
-#' @param priors_only a logical specifying whether we should only sample from the prior
-#' @param silent a logical specifying whether to print results from sampling and bridgesampling
+#' @param hyp string specifying the hypothesis
+#' @param sds vector containing sample standard deviations (with ns - 1 as denominator)
+#' @param ns vector containing sample sizes
+#' @param a numeric specifying the value of the parameters of the Dirichlet prior
+#' @param compute_ml logical specifying whether the marginal likelihood should be computed
+#' @param priors_only logical specifying whether we should only sample from the prior
+#' @param silent logical specifying whether to print results from sampling and bridgesampling
 #' @param ... arguments to rstan::sampling
 #' @returns an object of class 'bfvar', which is a stanfit object with a log marginal likelihood (if desired)
-.create_bfvar_object <- function(hyp, ns, ss, a, compute_ml = TRUE, priors_only = FALSE, silent = TRUE, ...) {
+.create_bfvar_object <- function(hyp, ns, sds, a, compute_ml = TRUE, priors_only = FALSE, silent = TRUE, ...) {
 
   # Translate hypothesis on variance / standard deviation into hypothesis on precision
   hyp <- gsub('>', '<', hyp)
   logml <- NULL
+  ss <- sds^2 # sum of squares
   standat <- .prepare_standat(hyp, ns, ss, a, priors_only = priors_only)
   refresh <- ifelse(silent, 0, 200)
   standat$nr_equal <- standat$nr_equal * !.is_allequal(hyp)

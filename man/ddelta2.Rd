@@ -20,8 +20,6 @@ ddelta2(x, n1, n2, sd1, sd2, alpha = 0.5, logarithm = FALSE)
 \item{alpha}{parameter of the prior}
 
 \item{logarithm}{a logical specifying whether the log should be taken}
-
-\item{interval}{interval of the prior}
 }
 \value{
 The (log) density at x

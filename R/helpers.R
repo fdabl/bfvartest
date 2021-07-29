@@ -1,5 +1,7 @@
 # Computes the log marginal likelihood for H1 in the one-sample test
-.compute_logml_restr_k1 <- function(v, s2, popsd, interval, alpha = 0.50) {
+.compute_logml_restr_k1 <- function(
+  v, s2, popsd, interval, nonoverlapping_interval = FALSE, alpha = 0.50
+  ) {
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
@@ -10,27 +12,65 @@
     value
   }
 
-  # Change normalizing constant when prior is restricted
+  get_normalizing_constant <- function(lo, hi) {
+    # Change normalizing constant when prior is restricted
+    hi_Z <- stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
+    lo_Z <- ifelse(
+      lo == 0, 0,
+      stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value
+    )
+
+    Z <- hi_Z - lo_Z
+    Z
+  }
+
   lo <- interval[1]
   hi <- interval[2]
-  hi_Z <- stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
-  lo_Z <- ifelse(lo == 0, 0, stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value)
-  Z <- hi_Z - lo_Z
 
-  # Integrate likelihood with respect to prior
-  value <- stats::integrate(function(tau) {
-    llh <- v / 2 * log(tau) - tau * v * s2 / 2
-    lprior <- scaled_lbetaprime(tau, tau0, alpha)
+  if (nonoverlapping_interval) {
 
-    exp(llh + lprior - log(Z))
-  }, lo, hi)$value
+    Z1 <- get_normalizing_constant(0, lo)
+    Z2 <- get_normalizing_constant(hi, Inf)
+
+    # Integrate likelihood with respect to prior (0 to lo)
+    value1 <- stats::integrate(function(tau) {
+      llh <- v / 2 * log(tau) - tau * v * s2 / 2
+      lprior <- scaled_lbetaprime(tau, tau0, alpha)
+
+      exp(llh + lprior - log(Z1))
+    }, 0, lo)$value
+
+    # Integrate likelihood with respect to prior (0 to lo)
+    value2 <- stats::integrate(function(tau) {
+      llh <- v / 2 * log(tau) - tau * v * s2 / 2
+      lprior <- scaled_lbetaprime(tau, tau0, alpha)
+
+      exp(llh + lprior - log(Z2))
+    }, hi, Inf)$value
+
+    value <- value1 + value2
+
+  } else {
+
+    Z <- get_normalizing_constant(lo, hi)
+
+    # Integrate likelihood with respect to prior
+    value <- stats::integrate(function(tau) {
+      llh <- v / 2 * log(tau) - tau * v * s2 / 2
+      lprior <- scaled_lbetaprime(tau, tau0, alpha)
+
+      exp(llh + lprior - log(Z))
+    }, lo, hi)$value
+  }
 
   log(value)
 }
 
 
 # Computes the log marginal likelihood for H1 in the two-sample test
-.compute_logml_restr_k2 <- function(v1, v2, s1, s2, interval, alpha = 0.50) {
+.compute_logml_restr_k2 <- function(
+  v1, v2, s1, s2, interval, nonoverlapping_interval = FALSE, alpha = 0.50
+  ) {
   v <- v1 + v2
 
   # Transform \delta to \rho
@@ -38,19 +78,49 @@
   to_rho <- function(delta) ifelse(delta == Inf, 1, delta^2 / (1 + delta^2))
   lo <- to_rho(interval[1])
   hi <- to_rho(interval[2])
-  Z <- stats::pbeta(hi, alpha, alpha) - stats::pbeta(lo, alpha, alpha)
 
-  # Rmpfr provides arbitrary precision floating point arithmetic
-  # Integrate likelihood with respect to prior
-  value <- Rmpfr::integrateR(function(rho) {
-    rho <- Rmpfr::mpfr(rho, 100)
-    llh <- (v1 / 2 + alpha - 1) * log(rho) +
-           (v2 / 2 + alpha - 1) * log(1 - rho) +
-           (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
+  if (nonoverlapping_interval) {
 
-    exp(llh - log(Z) - lbeta(alpha, alpha))
-  }, lo, hi)$value
+    Z1 <- stats::pbeta(lo, alpha, alpha)
+    Z2 <- 1 - stats::pbeta(hi, alpha, alpha)
 
+    # Rmpfr provides arbitrary precision floating point arithmetic
+    # Integrate likelihood with respect to prior
+    value1 <- Rmpfr::integrateR(function(rho) {
+      rho <- Rmpfr::mpfr(rho, 100)
+      llh <- (v1 / 2 + alpha - 1) * log(rho) +
+        (v2 / 2 + alpha - 1) * log(1 - rho) +
+        (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
+
+      exp(llh - log(Z1) - lbeta(alpha, alpha))
+    }, 0, lo)$value
+
+
+    value2 <- Rmpfr::integrateR(function(rho) {
+      rho <- Rmpfr::mpfr(rho, 100)
+      llh <- (v1 / 2 + alpha - 1) * log(rho) +
+        (v2 / 2 + alpha - 1) * log(1 - rho) +
+        (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
+
+      exp(llh - log(Z2) - lbeta(alpha, alpha))
+    }, hi, 1)$value
+
+
+    value <- value1 + value2
+
+  } else {
+
+    Z <- stats::pbeta(hi, alpha, alpha) - stats::pbeta(lo, alpha, alpha)
+
+    value <- Rmpfr::integrateR(function(rho) {
+      rho <- Rmpfr::mpfr(rho, 100)
+      llh <- (v1 / 2 + alpha - 1) * log(rho) +
+        (v2 / 2 + alpha - 1) * log(1 - rho) +
+        (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
+
+      exp(llh - log(Z) - lbeta(alpha, alpha))
+    }, lo, hi)$value
+  }
 
   log(value)
 }

@@ -2,8 +2,34 @@ context('K = 1 Sample Test')
 test_that('K = 1 Test gives expected results', {
   expect_lt(onesd_test(100, 1, 1, 0.5), 0) # log BF10 < 0
   expect_gt(onesd_test(100, 1, 2, 0.5), 0) # log BF10 > 0
-})
 
+  # H0 true
+  BF_10 <- onesd_test(100, 1, 1, 0.5)
+  BF_overlapping_10 <- onesd_test(100, 1, 1, 0.5, null_interval = c(0.90, 1.10))
+  BF_nonoverlapping_10 <- onesd_test(
+    100, 1, 1, 0.5, null_interval = c(0.90, 1.10), nonoverlapping_interval = TRUE
+  )
+
+  # More evidence for sharp H0
+  expect_gt(BF_overlapping_10, BF_10)
+
+  # Non-overlapping H1 should do worse
+  expect_gt(BF_overlapping_10, BF_nonoverlapping_10)
+
+  # H1 true
+  BF_10 <- onesd_test(100, 1.2, 1, 0.5)
+  BF_overlapping_10 <- onesd_test(100, 1.2, 1, 0.5, null_interval = c(0.90, 1.10))
+  BF_nonoverlapping_10 <- onesd_test(
+    100, 1.2, 1, 0.5, null_interval = c(0.90, 1.10),
+    nonoverlapping_interval = TRUE
+  )
+
+  # More evidence against sharp H0
+  expect_gt(BF_10, BF_overlapping_10)
+
+  # Non-overlapping H1 should do better
+  expect_gt(BF_nonoverlapping_10, BF_overlapping_10)
+})
 
 
 context('K = 2 Sample Test')
@@ -24,6 +50,32 @@ test_that('K = 2 test gives expected results', {
 
   # H1 is true: 1 is larger than 2
   expect_lt(twosd_test(100, 100, 1, 2, 0.5, alternative_interval = c(0, 1)), 0)
+
+  # H0 true
+  BF_10 <- twosd_test(100, 100, 1, 1, 0.5)
+  BF_overlapping_10 <- twosd_test(100, 100, 1, 1, 0.5, null_interval = c(0.90, 1.10))
+  BF_nonoverlapping_10 <- twosd_test(
+    100, 100, 1, 1, 0.5, null_interval = c(0.90, 1.10), nonoverlapping_interval = TRUE
+  )
+
+  # More evidence for sharp H0
+  expect_gt(BF_overlapping_10, BF_10)
+
+  # Non-overlapping H1 should do worse
+  expect_gt(BF_overlapping_10, BF_nonoverlapping_10)
+
+  # H1 true
+  BF_10 <- twosd_test(100, 100, 1, 1.5, 0.5)
+  BF_overlapping_10 <- twosd_test(100, 100, 1, 1.5, 0.5, null_interval = c(0.90, 1.10))
+  BF_nonoverlapping_10 <- twosd_test(
+    100, 100, 1, 1.5, 0.5, null_interval = c(0.90, 1.10), nonoverlapping_interval = TRUE
+  )
+
+  # More evidence against sharp H0
+  expect_gt(BF_10, BF_overlapping_10)
+
+  # Non-overlapping H1 should do better
+  expect_gt(BF_nonoverlapping_10, BF_overlapping_10)
 })
 
 

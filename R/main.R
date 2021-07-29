@@ -7,6 +7,7 @@
 #' @param alpha parameter of the prior
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
+#' @param nonoverlapping_interval a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)
 #' @param logarithm a logical specifying whether the log should be taken
 #' @return The one-sample log Bayes factor in favour of H1 with delta = popsd / s
 #' @examples
@@ -15,14 +16,20 @@
 #' # one-sided test
 #' onesd_test(100, 1, 1, 0.50, alternative_interval = c(1, Inf))
 #'
-#' # interval Bayes factor
-#' onesd_test(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1))
+#' # Interval Bayes factor (overlapping)
+#' onesd_test(100, 1, 1, 0.50, null_interval = c(0.9, 1.1))
+#'
+#' # Interval Bayes factor (non-overlapping)
+#' onesd_test(100, 1, 1, 0.50, null_interval = c(0.9, 1.1), nonoverlapping_interval = TRUE)
 #'
 #' # one-sided interval Bayes factor
 #' onesd_test(100, 1, 1, 0.50,
 #'           alternative_interval = c(1.1, Inf),
 #'           null_interval = c(0.9, 1.1))
-onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
+onesd_test <- function(
+  n, s, popsd, alpha = 0.50, null_interval = NULL,
+  alternative_interval = c(0, Inf), nonoverlapping_interval = FALSE, logarithm = TRUE
+  ) {
   .check_interval_input(alternative_interval, null_interval)
 
   # Convert to sample sum of squares
@@ -39,7 +46,21 @@ onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
     logml0 <- .compute_logml_restr_k1(v, s2, popsd, interval = null_interval, alpha = alpha)
   }
 
-  logml1 <- .compute_logml_restr_k1(v, s2, popsd, interval = alternative_interval, alpha = alpha)
+  if (nonoverlapping_interval) {
+    if (is.null(null_interval)) {
+      stop('Non-overlapping interval Bayes factors require a specification of the null interval')
+    }
+
+    logml1 <- .compute_logml_restr_k1(
+      v, s2, popsd, interval = null_interval, alpha = alpha, nonoverlapping_interval = TRUE
+    )
+
+  } else {
+
+    logml1 <- .compute_logml_restr_k1(v, s2, popsd, interval = alternative_interval, alpha = alpha)
+  }
+
+
   ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))
 }
 
@@ -52,8 +73,9 @@ onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
 #' @param sd1 sample standard deviation of group 1 (with n1 - 1 as denominator)
 #' @param sd2 sample standard deviation of group 2 (with n2 - 1 as denominator)
 #' @param alpha parameter of the prior
-#' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
+#' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
+#' @param nonoverlapping_interval a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)
 #' @param logarithm a logical specifying whether the log should be taken
 #' @return The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
 #' @examples
@@ -65,11 +87,19 @@ onesd_test <- function(n, s, popsd, alpha = 0.50, alternative_interval = c(0, In
 #' twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(1, Inf))
 #' twosd_test(100, 200, 1, 2, 4.5, alternative_interval = c(0, 1))
 #'
+#' # Interval Bayes factor (overlapping)
+#' twosd_test(100, 100, 1, 1, 0.50, null_interval = c(0.9, 1.1))
+#'
+#' # Interval Bayes factor (non-overlapping)
+#' twosd_test(100, 100, 1, 1, 0.50, null_interval = c(0.9, 1.1), nonoverlapping_interval = TRUE)
+#'
 #' # One-sided interval Bayes factor
 #' twosd_test(100, 200, 1, 2, 4.5,
 #'            alternative_interval = c(1.1, Inf),
 #'            null_interval = c(0.9, 1.1))
-twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(0, Inf), null_interval = NULL, logarithm = TRUE) {
+twosd_test <- function(
+  n1, n2, sd1, sd2, alpha = 0.50, null_interval = NULL,
+  alternative_interval = c(0, Inf), nonoverlapping_interval = FALSE, logarithm = TRUE) {
   .check_interval_input(alternative_interval, null_interval)
 
   # convert to sample sum of squares
@@ -87,7 +117,21 @@ twosd_test <- function(n1, n2, sd1, sd2, alpha = 0.50, alternative_interval = c(
     logml0 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = null_interval, alpha = alpha) # proportional to logml1
   }
 
-  logml1 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = alternative_interval, alpha = alpha)
+  if (nonoverlapping_interval) {
+    if (is.null(null_interval)) {
+      stop('Non-overlapping interval Bayes factors require a specification of the null interval')
+    }
+
+    logml1 <- .compute_logml_restr_k2(
+      v1, v2, s1, s2, interval = null_interval, nonoverlapping_interval = TRUE, alpha = alpha
+      )
+
+  } else {
+
+    logml1 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = alternative_interval, alpha = alpha)
+  }
+
+
   val <- ifelse(logarithm, logml1 - logml0, exp(logml1 - logml0))[[1]]
   suppressWarnings(Rmpfr::asNumeric(val))
 }

@@ -9,8 +9,9 @@ onesd_test(
   s,
   popsd,
   alpha = 0.5,
-  alternative_interval = c(0, Inf),
   null_interval = NULL,
+  alternative_interval = c(0, Inf),
+  nonoverlapping_interval = FALSE,
   logarithm = TRUE
 )
 }
@@ -23,9 +24,11 @@ onesd_test(
 
 \item{alpha}{parameter of the prior}
 
+\item{null_interval}{interval for the null hypothesis (e.g., c(0.9, 1.1))}
+
 \item{alternative_interval}{interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)}
 
-\item{null_interval}{interval for the null hypothesis (e.g., c(0.9, 1.1))}
+\item{nonoverlapping_interval}{a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)}
 
 \item{logarithm}{a logical specifying whether the log should be taken}
 }
@@ -41,8 +44,11 @@ onesd_test(100, 1, 1, 0.50)
 # one-sided test
 onesd_test(100, 1, 1, 0.50, alternative_interval = c(1, Inf))
 
-# interval Bayes factor
-onesd_test(100, 1, 1, 0.50, alternative_interval = c(0.9, 1.1))
+# Interval Bayes factor (overlapping)
+onesd_test(100, 1, 1, 0.50, null_interval = c(0.9, 1.1))
+
+# Interval Bayes factor (non-overlapping)
+onesd_test(100, 1, 1, 0.50, null_interval = c(0.9, 1.1), nonoverlapping_interval = TRUE)
 
 # one-sided interval Bayes factor
 onesd_test(100, 1, 1, 0.50,

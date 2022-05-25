@@ -8,7 +8,7 @@ onesd_test(
   n,
   s,
   popsd,
-  alpha = 0.5,
+  u = 0.5,
   null_interval = NULL,
   alternative_interval = c(0, Inf),
   nonoverlapping_interval = FALSE,
@@ -22,7 +22,7 @@ onesd_test(
 
 \item{popsd}{population standard deviation we test against}
 
-\item{alpha}{parameter of the prior}
+\item{u}{parameter of the prior}
 
 \item{null_interval}{interval for the null hypothesis (e.g., c(0.9, 1.1))}
 
@@ -33,7 +33,7 @@ onesd_test(
 \item{logarithm}{a logical specifying whether the log should be taken}
 }
 \value{
-The one-sample log Bayes factor in favour of H1 with delta = popsd / s
+The one-sample log Bayes factor in favour of H1 with \phi = popsd / s
 }
 \description{
 Computes the one-sample log Bayes factor in favour of H1

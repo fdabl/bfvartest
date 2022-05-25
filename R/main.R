@@ -4,12 +4,12 @@
 #' @param n sample size
 #' @param s sample standard deviation (with n - 1 as denominator)
 #' @param popsd population standard deviation we test against
-#' @param alpha parameter of the prior
+#' @param u parameter of the prior
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
 #' @param nonoverlapping_interval a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)
 #' @param logarithm a logical specifying whether the log should be taken
-#' @return The one-sample log Bayes factor in favour of H1 with delta = popsd / s
+#' @return The one-sample log Bayes factor in favour of H1 with \phi = popsd / s
 #' @examples
 #' onesd_test(100, 1, 1, 0.50)
 #'
@@ -27,7 +27,7 @@
 #'           alternative_interval = c(1.1, Inf),
 #'           null_interval = c(0.9, 1.1))
 onesd_test <- function(
-  n, s, popsd, alpha = 0.50, null_interval = NULL,
+  n, s, popsd, u = 0.50, null_interval = NULL,
   alternative_interval = c(0, Inf), nonoverlapping_interval = FALSE, logarithm = TRUE
   ) {
   .check_interval_input(alternative_interval, null_interval)
@@ -43,7 +43,7 @@ onesd_test <- function(
   if (is.null(null_interval)) {
     logml0 <- v / 2 * log(tau0) - tau0 * v * s2 / 2
   } else {
-    logml0 <- .compute_logml_restr_k1(v, s2, popsd, interval = null_interval, alpha = alpha)
+    logml0 <- .compute_logml_restr_k1(v, s2, popsd, interval = null_interval, u = u)
   }
 
   if (nonoverlapping_interval) {
@@ -52,12 +52,12 @@ onesd_test <- function(
     }
 
     logml1 <- .compute_logml_restr_k1(
-      v, s2, popsd, interval = null_interval, alpha = alpha, nonoverlapping_interval = TRUE
+      v, s2, popsd, interval = null_interval, u = u, nonoverlapping_interval = TRUE
     )
 
   } else {
 
-    logml1 <- .compute_logml_restr_k1(v, s2, popsd, interval = alternative_interval, alpha = alpha)
+    logml1 <- .compute_logml_restr_k1(v, s2, popsd, interval = alternative_interval, u = u)
   }
 
 
@@ -72,12 +72,12 @@ onesd_test <- function(
 #' @param n2 sample size of group 2
 #' @param sd1 sample standard deviation of group 1 (with n1 - 1 as denominator)
 #' @param sd2 sample standard deviation of group 2 (with n2 - 1 as denominator)
-#' @param alpha parameter of the prior
+#' @param u parameter of the prior
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param nonoverlapping_interval a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)
 #' @param logarithm a logical specifying whether the log should be taken
-#' @return The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
+#' @return The two-sample log Bayes factor in favour of H1 with \phi = sd2 / sd1
 #' @examples
 #'
 #' # Interval null Bayes factor
@@ -98,7 +98,7 @@ onesd_test <- function(
 #'            alternative_interval = c(1.1, Inf),
 #'            null_interval = c(0.9, 1.1))
 twosd_test <- function(
-  n1, n2, sd1, sd2, alpha = 0.50, null_interval = NULL,
+  n1, n2, sd1, sd2, u = 0.50, null_interval = NULL,
   alternative_interval = c(0, Inf), nonoverlapping_interval = FALSE, logarithm = TRUE) {
   .check_interval_input(alternative_interval, null_interval)
 
@@ -114,7 +114,7 @@ twosd_test <- function(
   if (is.null(null_interval)) {
     logml0 <- (-v / 2) * log(v1 * s1 + v2 * s2) # proportional to logml0
   } else {
-    logml0 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = null_interval, alpha = alpha) # proportional to logml1
+    logml0 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = null_interval, u = u) # proportional to logml1
   }
 
   if (nonoverlapping_interval) {
@@ -123,12 +123,12 @@ twosd_test <- function(
     }
 
     logml1 <- .compute_logml_restr_k2(
-      v1, v2, s1, s2, interval = null_interval, nonoverlapping_interval = TRUE, alpha = alpha
+      v1, v2, s1, s2, interval = null_interval, nonoverlapping_interval = TRUE, u = u
       )
 
   } else {
 
-    logml1 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = alternative_interval, alpha = alpha)
+    logml1 <- .compute_logml_restr_k2(v1, v2, s1, s2, interval = alternative_interval, u = u)
   }
 
 
@@ -137,7 +137,7 @@ twosd_test <- function(
 }
 
 
-#' Computes the posterior density of delta for the K = 2 case
+#' Computes the posterior density of \phi for the K = 2 case
 #'
 #' @export
 #' @param x numerical value
@@ -145,13 +145,13 @@ twosd_test <- function(
 #' @param n2 sample size of group 2
 #' @param sd1 sample standard deviation of group 1 (with n1 - 1 as denominator)
 #' @param sd2 sample standard deviation of group 2 (with n2 - 1 as denominator)
-#' @param alpha parameter of the prior
+#' @param u parameter of the prior
 #' @param logarithm a logical specifying whether the log should be taken
 #' @return The (log) density at x
 #' @examples
 #'
-#' ddelta2(seq(0, 2, .01), 100, 100, 1, 1)
-ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
+#' dphi2(seq(0, 2, .01), 100, 100, 1, 1)
+dphi2 <- function(x, n1, n2, sd1, sd2, u = 0.50, logarithm = FALSE) {
 
   # convert to sample sum of squares
   s1 <- sd1^2
@@ -163,12 +163,12 @@ ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
   v <- v1 + v2
 
   # Normalizing constant
-  Z <- lbeta(v1/2 + alpha, v2/2 + alpha) +
-    log(.Gauss2F1(2*alpha, v2/2 + alpha, v/2 + 2*alpha, 1 - (v1 * s1) / (v2 * s2))) +
-    (-v1/2 + alpha) * log((v1 * s1) / (v2 * s2))
+  Z <- lbeta(v1/2 + u, v2/2 + u) +
+    log(.Gauss2F1(2*u, v2/2 + u, v/2 + 2*u, 1 - (v1 * s1) / (v2 * s2))) +
+    (-v1/2 + u) * log((v1 * s1) / (v2 * s2))
 
   # Unnormalized density
-  val <- log(2) + (v1 + 2 * alpha - 1) * log(x) + (-2 * alpha) * log(1 + x^2) +
+  val <- log(2) + (v1 + 2 * u - 1) * log(x) + (-2 * u) * log(1 + x^2) +
          (-v / 2) * log(x^2 * v1 * s1 / (v2 * s2) + 1)
 
   if (logarithm) {
@@ -185,7 +185,7 @@ ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
 #' @param hyp vector of hypotheses
 #' @param ns vector of sample sizes
 #' @param sds vector containing the sample standard deviations (with ns - 1 as denominators)
-#' @param alpha numeric specifying the value of the parameters of the Dirichlet prior
+#' @param u numeric specifying the value of the parameters of the Dirichlet prior
 #' @param logarithm logical specifying whether the log should be taken
 #' @param compute_ml logical specifying whether the marginal likelihood should be computed
 #' @param priors_only logical specifying whether we should only sample from the prior
@@ -196,7 +196,7 @@ ddelta2 <- function(x, n1, n2, sd1, sd2, alpha = 0.50, logarithm = FALSE) {
 #' ns <- c(100, 100, 100)
 #' hyp <- c('1=2=3', '1,2,3', '1>2>3', '1>2=3', '1>2,3')
 #' ksd_test(hyp, ns, ss, 0.50)
-ksd_test <- function(hyp, ns, sds, alpha = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
+ksd_test <- function(hyp, ns, sds, u = 0.50, logarithm = TRUE, compute_ml = TRUE, priors_only = FALSE, ...) {
   .check_user_input(hyp, ns, sds)
 
   # Translate hypothesis on variance / standard deviation into hypothesis on precision
@@ -206,7 +206,7 @@ ksd_test <- function(hyp, ns, sds, alpha = 0.50, logarithm = TRUE, compute_ml = 
 
   for (i in seq(nr_hyp)) {
     res[[hyp[i]]] <- .create_bfvar_object(
-      hyp2[i], ns, sds, alpha, priors_only = priors_only,
+      hyp2[i], ns, sds, u, priors_only = priors_only,
       compute_ml = ifelse(priors_only, FALSE, compute_ml), ...
     )
   }

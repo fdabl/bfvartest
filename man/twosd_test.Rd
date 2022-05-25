@@ -9,7 +9,7 @@ twosd_test(
   n2,
   sd1,
   sd2,
-  alpha = 0.5,
+  u = 0.5,
   null_interval = NULL,
   alternative_interval = c(0, Inf),
   nonoverlapping_interval = FALSE,
@@ -25,7 +25,7 @@ twosd_test(
 
 \item{sd2}{sample standard deviation of group 2 (with n2 - 1 as denominator)}
 
-\item{alpha}{parameter of the prior}
+\item{u}{parameter of the prior}
 
 \item{null_interval}{interval for the null hypothesis (e.g., c(0.9, 1.1))}
 
@@ -36,7 +36,7 @@ twosd_test(
 \item{logarithm}{a logical specifying whether the log should be taken}
 }
 \value{
-The two-sample log Bayes factor in favour of H1 with delta = sd2 / sd1
+The two-sample log Bayes factor in favour of H1 with \phi = sd2 / sd1
 }
 \description{
 Computes the two-sample log Bayes factor in favour of H1

@@ -80,10 +80,10 @@ test_that('K = 2 test gives expected results', {
 
 
 test_that('Posterior integrates to one', {
-  int1 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 100, 1, 1), 0, Inf)$value
-  int2 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 100, 1, 2), 0, Inf)$value
-  int3 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 100, 2, 1), 0, Inf)$value
-  int4 <- integrate(function(x) Vectorize(ddelta2)(x, 100, 200, 2, 1), 0, Inf)$value
+  int1 <- integrate(function(x) Vectorize(dphi2)(x, 100, 100, 1, 1), 0, Inf)$value
+  int2 <- integrate(function(x) Vectorize(dphi2)(x, 100, 100, 1, 2), 0, Inf)$value
+  int3 <- integrate(function(x) Vectorize(dphi2)(x, 100, 100, 2, 1), 0, Inf)$value
+  int4 <- integrate(function(x) Vectorize(dphi2)(x, 100, 200, 2, 1), 0, Inf)$value
   expect_true(all(abs(c(int1, int2, int3, int4) - 1) < .001))
 })
 
@@ -170,7 +170,7 @@ test_that('ksd_test gives same result as (undirected) twosd_test for K = 2', {
   ns <- c(100, 100)
   hyp <- c('1,2', '1=2')
 
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, u = 0.50, chains = 6, iter = 6000)
   bf10 <- twosd_test(ns[1], ns[2], sds[1], sds[2])
   expect_equal(res$BF[1, 2], bf10, tolerance = 0.05)
 })
@@ -185,7 +185,7 @@ test_that('ksd_test gives same result as (directed) twosd_test for K = 2', {
   bfr0 <- twosd_test(ns[1], ns[2], sds[1], sds[2], alternative_interval = c(0, 1))
   bfr1 <- bfr0 - bf10
 
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, u = 0.50, chains = 6, iter = 6000)
   expect_equal(res$BF[2, 1], bfr1, tolerance = 0.05)
 })
 
@@ -207,7 +207,7 @@ test_that('Respects evidence bound in ordinal hypotheses', {
   sds <- c(10, 5, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1,2,3', '1>2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, u = 0.50, chains = 6, iter = 6000)
 
   expect_equal(res$BF[2, 1], lfactorial(3), tolerance = 0.05)
 })
@@ -217,7 +217,7 @@ test_that('Mixed equality and ordinal hypotheses make sense I', {
   sds <- c(2, 2, 1)
   ns <- c(500, 500, 500)
   hyp <- c('1=2,3', '1=2>3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 1000, cores = 1)
+  res <- ksd_test(hyp, ns, sds, u = 0.50, chains = 6, iter = 1000, cores = 1)
 
   expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.05)
 })
@@ -227,7 +227,7 @@ test_that('Mixed equality and ordinal hypotheses make sense II', {
   sds <- c(4, 4, 4, 1)
   ns <- c(500, 500, 500, 500)
   hyp <- c('1=2=3,4', '1=2=3>4')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 1000, cores = 1)
+  res <- ksd_test(hyp, ns, sds, u = 0.50, chains = 6, iter = 1000, cores = 1)
 
   expect_equal(res$BF[2, 1], lfactorial(2), tolerance = 0.05)
 })
@@ -238,7 +238,7 @@ test_that('Mixed equality and ordinal hypotheses make sense III', {
   sds <- c(5, 4, 4, 3, 1)
   hyp <- c('1=2=3=4=5', '1,2,3,4,5', '1>2=3>4,5')
 
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50, chains = 6, iter = 6000)
+  res <- ksd_test(hyp, ns, sds, u = 0.50, chains = 6, iter = 6000)
   expect_gt(res$BF[3, 1], 1)
   expect_gt(res$BF[3, 2], 1)
 })
@@ -248,7 +248,7 @@ test_that('Evidence ordering makes sense', {
   sds <- c(2, 1.5, 1)
   ns <- c(100, 100, 100)
   hyp <- c('1>2>3', '1,2>3', '1,2,3', '1=2>3', '1=2=3')
-  res <- ksd_test(hyp, ns, sds, alpha = 0.50)
+  res <- ksd_test(hyp, ns, sds, u = 0.50)
 
   res$BF <- NULL
   logmls <- sapply(res, function(x) x$logml)

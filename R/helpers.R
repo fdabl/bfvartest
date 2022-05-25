@@ -1,23 +1,23 @@
 # Computes the log marginal likelihood for H1 in the one-sample test
 .compute_logml_restr_k1 <- function(
-  v, s2, popsd, interval, nonoverlapping_interval = FALSE, alpha = 0.50
+  v, s2, popsd, interval, nonoverlapping_interval = FALSE, u = 0.50
   ) {
   popvar <- popsd^2
   tau0 <- 1 / popvar
 
   # Prior distribution centered at \tau_0
-  scaled_lbetaprime <- function(tau, tau0, alpha) {
-    value <- (alpha - 1) * log(tau / tau0) - 2 * alpha *
-             log(1 + tau / tau0) - log(tau0) - lbeta(alpha, alpha)
+  scaled_lbetaprime <- function(tau, tau0, u) {
+    value <- (u - 1) * log(tau / tau0) - 2 * u *
+             log(1 + tau / tau0) - log(tau0) - lbeta(u, u)
     value
   }
 
   get_normalizing_constant <- function(lo, hi) {
     # Change normalizing constant when prior is restricted
-    hi_Z <- stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, hi)$value
+    hi_Z <- stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, u)), 0, hi)$value
     lo_Z <- ifelse(
       lo == 0, 0,
-      stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, alpha)), 0, lo)$value
+      stats::integrate(function(tau) exp(scaled_lbetaprime(tau, tau0, u)), 0, lo)$value
     )
 
     Z <- hi_Z - lo_Z
@@ -35,7 +35,7 @@
     # Integrate likelihood with respect to prior (0 to lo)
     value1 <- stats::integrate(function(tau) {
       llh <- v / 2 * log(tau) - tau * v * s2 / 2
-      lprior <- scaled_lbetaprime(tau, tau0, alpha)
+      lprior <- scaled_lbetaprime(tau, tau0, u)
 
       exp(llh + lprior - log(Z1))
     }, 0, lo)$value
@@ -43,7 +43,7 @@
     # Integrate likelihood with respect to prior (0 to lo)
     value2 <- stats::integrate(function(tau) {
       llh <- v / 2 * log(tau) - tau * v * s2 / 2
-      lprior <- scaled_lbetaprime(tau, tau0, alpha)
+      lprior <- scaled_lbetaprime(tau, tau0, u)
 
       exp(llh + lprior - log(Z2))
     }, hi, Inf)$value
@@ -57,7 +57,7 @@
     # Integrate likelihood with respect to prior
     value <- stats::integrate(function(tau) {
       llh <- v / 2 * log(tau) - tau * v * s2 / 2
-      lprior <- scaled_lbetaprime(tau, tau0, alpha)
+      lprior <- scaled_lbetaprime(tau, tau0, u)
 
       exp(llh + lprior - log(Z))
     }, lo, hi)$value
@@ -69,40 +69,40 @@
 
 # Computes the log marginal likelihood for H1 in the two-sample test
 .compute_logml_restr_k2 <- function(
-  v1, v2, s1, s2, interval, nonoverlapping_interval = FALSE, alpha = 0.50
+  v1, v2, s1, s2, interval, nonoverlapping_interval = FALSE, u = 0.50
   ) {
   v <- v1 + v2
 
-  # Transform \delta to \rho
+  # Transform \phi to \rho
   # Change normalizing constant when prior is restricted
-  to_rho <- function(delta) ifelse(delta == Inf, 1, delta^2 / (1 + delta^2))
+  to_rho <- function(phi) ifelse(phi == Inf, 1, phi^2 / (1 + phi^2))
   lo <- to_rho(interval[1])
   hi <- to_rho(interval[2])
 
   if (nonoverlapping_interval) {
 
-    Z1 <- stats::pbeta(lo, alpha, alpha)
-    Z2 <- 1 - stats::pbeta(hi, alpha, alpha)
+    Z1 <- stats::pbeta(lo, u, u)
+    Z2 <- 1 - stats::pbeta(hi, u, u)
 
     # Rmpfr provides arbitrary precision floating point arithmetic
     # Integrate likelihood with respect to prior
     value1 <- Rmpfr::integrateR(function(rho) {
       rho <- Rmpfr::mpfr(rho, 100)
-      llh <- (v1 / 2 + alpha - 1) * log(rho) +
-        (v2 / 2 + alpha - 1) * log(1 - rho) +
+      llh <- (v1 / 2 + u - 1) * log(rho) +
+        (v2 / 2 + u - 1) * log(1 - rho) +
         (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
 
-      exp(llh - log(Z1) - lbeta(alpha, alpha))
+      exp(llh - log(Z1) - lbeta(u, u))
     }, 0, lo)$value
 
 
     value2 <- Rmpfr::integrateR(function(rho) {
       rho <- Rmpfr::mpfr(rho, 100)
-      llh <- (v1 / 2 + alpha - 1) * log(rho) +
-        (v2 / 2 + alpha - 1) * log(1 - rho) +
+      llh <- (v1 / 2 + u - 1) * log(rho) +
+        (v2 / 2 + u - 1) * log(1 - rho) +
         (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
 
-      exp(llh - log(Z2) - lbeta(alpha, alpha))
+      exp(llh - log(Z2) - lbeta(u, u))
     }, hi, 1)$value
 
 
@@ -110,15 +110,15 @@
 
   } else {
 
-    Z <- stats::pbeta(hi, alpha, alpha) - stats::pbeta(lo, alpha, alpha)
+    Z <- stats::pbeta(hi, u, u) - stats::pbeta(lo, u, u)
 
     value <- Rmpfr::integrateR(function(rho) {
       rho <- Rmpfr::mpfr(rho, 100)
-      llh <- (v1 / 2 + alpha - 1) * log(rho) +
-        (v2 / 2 + alpha - 1) * log(1 - rho) +
+      llh <- (v1 / 2 + u - 1) * log(rho) +
+        (v2 / 2 + u - 1) * log(1 - rho) +
         (-v / 2) * log(rho * v1 * s1 + (1 - rho) * v2 * s2)
 
-      exp(llh - log(Z) - lbeta(alpha, alpha))
+      exp(llh - log(Z) - lbeta(u, u))
     }, lo, hi)$value
   }
 
@@ -126,7 +126,7 @@
 }
 
 
-# Required for the posterior of \delta in the K = 2 case
+# Required for the posterior of \phi in the K = 2 case
 .Gauss2F1 <- function(a, b, c, x){
   if(x >= 0 & x < 1){
     gsl::hyperg_2F1(a, b, c, x)

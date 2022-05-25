@@ -6,3 +6,5 @@ src/stan_files/Mixed.o
 src/stan_files/Ordered.o
 *.o
 *.so
+/doc/
+/Meta/

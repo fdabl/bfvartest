@@ -8,7 +8,7 @@ ksd_test(
   hyp,
   ns,
   sds,
-  alpha = 0.5,
+  u = 0.5,
   logarithm = TRUE,
   compute_ml = TRUE,
   priors_only = FALSE,
@@ -22,7 +22,7 @@ ksd_test(
 
 \item{sds}{vector containing the sample standard deviations (with ns - 1 as denominators)}
 
-\item{alpha}{numeric specifying the value of the parameters of the Dirichlet prior}
+\item{u}{numeric specifying the value of the parameters of the Dirichlet prior}
 
 \item{logarithm}{logical specifying whether the log should be taken}
 

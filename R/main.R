@@ -9,7 +9,7 @@
 #' @param null_interval interval for the null hypothesis (e.g., c(0.9, 1.1))
 #' @param nonoverlapping_interval a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)
 #' @param logarithm a logical specifying whether the log should be taken
-#' @return The one-sample log Bayes factor in favour of H1 with \phi = popsd / s
+#' @return The one-sample log Bayes factor in favour of H1 with \eqn{\phi = popsd / s}
 #' @examples
 #' onesd_test(100, 1, 1, 0.50)
 #'
@@ -77,7 +77,7 @@ onesd_test <- function(
 #' @param alternative_interval interval for the alternative hypothesis (e.g., c(1, Inf) and c(0, 1) give directed tests)
 #' @param nonoverlapping_interval a logical specifying whether the intervals are non-overlapping (if TRUE, ignores alternative_interval and uses complement of null_interval)
 #' @param logarithm a logical specifying whether the log should be taken
-#' @return The two-sample log Bayes factor in favour of H1 with \phi = sd2 / sd1
+#' @return The two-sample log Bayes factor in favour of H1 with \eqn{\phi = sd2 / sd1}
 #' @examples
 #'
 #' # Interval null Bayes factor
@@ -137,7 +137,7 @@ twosd_test <- function(
 }
 
 
-#' Computes the posterior density of \phi for the K = 2 case
+#' Computes the posterior density of \eqn{\phi} for the K = 2 case
 #'
 #' @export
 #' @param x numerical value

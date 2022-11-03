@@ -46,7 +46,7 @@ onesd_test(
 )
 ```
 
-Note that $\phi \in \mathrm{R}^{+}$, and that we have specified the alternative intervall to be all of $\mathrm{R}^+ whole range. This means that we have done an undirected test. However, we could also test whether $\sigma > \sigma_0$, that is, whether $\phi < 1$, which is specified by the following alternative hypothesis:
+Note that $\phi \in \mathrm{R}^{+}$, and that we have specified the alternative interval to be all of $\mathrm{R}^+$. This means that we have done an undirected test. However, we could also test whether $\sigma > \sigma_0$, that is, whether $\phi < 1$, which is specified by the following alternative hypothesis:
 
 $$
 \mathcal{H}_+ : \phi \sim \text{BetaPrime}(u), \phi \in [0, 1] \enspace .
@@ -80,11 +80,11 @@ twosd_test(n1 = 969, n2 = 716, sd1 = 3.95, sd2 = 4.47, u = 4.50, alternative_int
 which is roughly double the size of the undirected Bayes factor (after exponentiating). Since the posterior density is available in closed-form, we can easily visualize it:
 
 ```{r, fig.align = 'center', fig.width = 6, fig.height = 4}
-delta <- seq(0, 2, .001)
-post <- ddelta2(delta, n1 = 969, n2 = 716, sd1 = 3.95, sd2 = 4.47, u = 4.50)
+x <- seq(0, 2, .001)
+post <- dphi2(x, n1 = 969, n2 = 716, sd1 = 3.95, sd2 = 4.47, u = 4.50)
 
 plot(
-  delta, post, type = 'l', ylim = c(0, 10), ylab = 'Density',
+  x, post, type = 'l', ylim = c(0, 10), ylab = 'Density',
   xlab = expression(delta), main = expression('Posterior of ' ~ delta), axes = FALSE
 )
 axis(1, at = seq(0, 2, .4))

@@ -24,8 +24,11 @@
     Z
   }
 
-  lo <- interval[1]
-  hi <- interval[2]
+  # The interval is specified for phi = popsd / sigma, while the
+  # integration below is over tau = 1 / sigma^2. Since
+  # phi^2 = tau / tau0, transform the bounds to the precision scale
+  lo <- tau0 * interval[1]^2
+  hi <- tau0 * interval[2]^2
 
   if (nonoverlapping_interval) {
 

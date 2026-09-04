@@ -32,6 +32,41 @@ test_that('K = 1 Test gives expected results', {
 })
 
 
+test_that('K = 1 interval bounds are applied on the phi scale', {
+  # Test for the issue report at
+  # https://observablehq.com/@colling/bayes-factors-for-comparing-variances
+  args <- list(n = 7, s = 0.22, popsd = sqrt(0.1), u = 0.5, logarithm = FALSE)
+
+  BF_10 <- do.call(onesd_test, args)
+  BF_less_10 <- do.call(
+    onesd_test, c(args, list(alternative_interval = c(0, 1)))
+  )
+  BF_greater_10 <- do.call(
+    onesd_test, c(args, list(alternative_interval = c(1, Inf)))
+  )
+
+  expect_equal(BF_less_10, 0.1530499, tolerance = 1e-6)
+  expect_equal(BF_greater_10, 0.6679437, tolerance = 1e-6)
+  expect_equal((BF_less_10 + BF_greater_10) / 2, BF_10, tolerance = 1e-6)
+
+  # Changing the measurement units must not change a Bayes factor
+  scaled_args <- args
+  scaled_args$s <- args$s * 10
+  scaled_args$popsd <- args$popsd * 10
+
+  expect_equal(
+    do.call(onesd_test, c(scaled_args, list(alternative_interval = c(0, 1)))),
+    BF_less_10,
+    tolerance = 1e-6
+  )
+  expect_equal(
+    do.call(onesd_test, c(scaled_args, list(alternative_interval = c(1, Inf)))),
+    BF_greater_10,
+    tolerance = 1e-6
+  )
+})
+
+
 context('K = 2 Sample Test')
 test_that('K = 2 test errors correctly (input check)', {
   expect_error(.check_interval_input(alternative_interval = NULL, null_interval = NULL))

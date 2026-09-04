@@ -44,7 +44,7 @@ transformed parameters {
 model{
 
   target += -log(tau);
-  lambda_unconstrained ~ gamma_lpdf(alpha, 1);
+  lambda_unconstrained ~ gamma(alpha, 1);
 
   if (!(priors_only == 1)) {
     // target += ll_const;

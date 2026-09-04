@@ -41,7 +41,7 @@ transformed parameters {
 
 model{
   target += -log(tau);
-  lambda_unconstrained ~ gamma_lpdf(alpha, 1);
+  lambda_unconstrained ~ gamma(alpha, 1);
 
   // adjust prior
   target += lgamma(nr_ordered + 1);
